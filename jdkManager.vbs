@@ -1,14 +1,14 @@
 
 '====================================================================================================
-'user variables : HKEY_CURRENT_USER\Environment. 
+'user variables : HKEY_CURRENT_USER\Environment.
 'system variables : HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment.
 '====================================================================================================
 
 'Call ReadEnvVar("System", "PATH")
 'Call ListAllInstalledApps()
-'Call GetJavaWmiCPanelReg ()
 
-Call GetJavaWmiEnvVars()
+Call GetJavaWmiCPanelReg ()
+Call GetJavaWmiEnvVars
 
 
 
@@ -20,7 +20,7 @@ Sub ReadEnvVar(envVarType, envVarName)
 Dim arrStrVar, strVar
     Set objShell = CreateObject("WScript.Shell")
     Set objEnv = objShell.Environment(envVarType)
-    'WScript.Echo objEnv(envVarName)
+    WScript.Echo objEnv(envVarName)
     arrStrVar = Split(objEnv(envVarName), ";")
 
     For Each strVar In arrStrVar
@@ -50,7 +50,7 @@ End Sub
 '--------------------------------------------------
 ' **** LIST INSTALLED JDK/JRE From REGISTRY **** '
 '--------------------------------------------------
-Sub GetJavaWmiCPanelReg ()
+Sub GetJavaWmiCPanelReg()
 
 Const HKLM = &H80000002 'HKEY_LOCAL_MACHINE
 strComputer = "."
@@ -109,16 +109,16 @@ Next
   If strJDKFound = 0 Then
     WScript.Echo "No JDK Found Installed"
   Else
-    Call PublishJDKJRE (arrJDK,2)
+    Call PublishJDKJRE(arrJDK, 2)
   End If
   
   If strJREFound = 0 Then
     WScript.Echo "No JRE Found Installed"
   Else
-    Call PublishJDKJRE (arrJRE,2)
+    Call PublishJDKJRE(arrJRE, 2)
   End If
  
-	Set objReg = Nothing
+    Set objReg = Nothing
 
 End Sub
 
@@ -128,23 +128,24 @@ End Sub
 Function IsJdkJreString(strJdkJre, strCallType)
 
 strJDK = "Development Kit"
-strValueType = "javapath"
+strTypeJpath = "javapath"
+strTypeCpath = "CPanel"
 
 Select Case strCallType
-    Case "CPanel"
-		If (InStr(1, strJdkJre, strJDK) <> 0) Then
-		    IsJdkJreString = "JDK"
-		ElseIf (IsNumeric(Mid(strJdkJre, 6, 1))) Then
-		    IsJdkJreString = "JRE"
-		Else
-		    IsJdkJreString = False
-		End If
-    Case "JPath"
-    	If (InStr(strJdkJre,strValueType) <> 0) Then
-    		IsJdkJreString = ExtractPathValue(strJdkJre,strValueType)
-    	Else
-		    IsJdkJreString = False
-    	End If 
+    Case strTypeCpath
+        If (InStr(1, strJdkJre, strJDK) <> 0) Then
+            IsJdkJreString = "JDK"
+        ElseIf (IsNumeric(Mid(strJdkJre, 6, 1))) Then
+            IsJdkJreString = "JRE"
+        Else
+            IsJdkJreString = False
+        End If
+    Case strTypeJpath
+        If (InStr(strJdkJre, strTypeJpath) <> 0) Then
+            IsJdkJreString = True
+        Else
+            IsJdkJreString = False
+        End If
 End Select
 
 
@@ -172,15 +173,16 @@ Dim counter, i
 
 Select Case strDimension
     Case 1
-		For i = 0 To UBound(arrJDKJRE)
-			WScript.Echo arrJDKJRE(i)
-		Next
+        For i = 0 To UBound(arrJDKJRE)
+            WScript.Echo arrJDKJRE(i)
+        Next
+         WScript.Echo vbCrLf
     Case 2
-    	For counter = 0 To UBound(arrJDKJRE, 2)
-		    WScript.Echo arrJDKJRE(0, counter)
-		    WScript.Echo arrJDKJRE(1, counter)
-		    WScript.Echo arrJDKJRE(2, counter)
-		Next
+        For counter = 0 To UBound(arrJDKJRE, 2)
+            WScript.Echo arrJDKJRE(0, counter) 
+            WScript.Echo arrJDKJRE(1, counter) 
+            WScript.Echo arrJDKJRE(2, counter) & vbCrLf
+        Next
 End Select
 
 End Function
@@ -190,10 +192,9 @@ End Function
 '--------------------------------------------------
 ' **** LIST JDK/JRE ENV VARAIABLES **** '
 '--------------------------------------------------
-Sub GetJavaWmiEnvVars ()
+Sub GetJavaWmiEnvVars()
 'Using WMI retrieves both USER and SYSTEM variable together, you cannot pick and choose
-strCallType = "JPath"
-Dim dictSysVars, dictUsrVars
+strCallType = "javapath"
 
 Dim arrJDKSys, arrJRESys
 strCntJDKSys = 0
@@ -211,63 +212,69 @@ strComputer = "."
 Set objWMIService = GetObject("winmgmts:" & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
 Set colItems = objWMIService.ExecQuery("Select * from Win32_Environment")
 
-For Each objItem in colItems
+For Each objItem In colItems
 
-	If (StrComp(objItem.Name,"JAVA_HOME") = 0) Then
-		Select Case (objItem.SystemVariable)
-		    Case "True"
-		    	arrJDKSys = Array(objItem.Name, objItem.SystemVariable, objItem.VariableValue)
-		    	strCntJDKSys = strCntJDKSys + 1
-		    Case "False"
-		    	arrJDKUsr = Array(objItem.Name, objItem.SystemVariable, objItem.VariableValue)
-		    	strCntJDKUsr = strCntJDKUsr + 1
-		End Select
-	ElseIf (StrComp(objItem.Name,"JRE_HOME") = 0) Then
-		Select Case (objItem.SystemVariable)
-		    Case "True"
-		    	arrJRESys = Array(objItem.Name, objItem.SystemVariable, objItem.VariableValue)
-		    	strCntJRESys = strCntJDKSys + 1
-		    Case "False"
-		    	arrJREUsr = Array(objItem.Name, objItem.SystemVariable, objItem.VariableValue)
-		    	strCntJREUsr = strCntJDKUsr + 1
-		End Select		
-	End If
-	
-	If (StrComp(objItem.Name,"Path") = 0) Then
-		If (IsJdkJreString(objItem.VariableValue, strCallType) <> "False") Then	
-			Select Case (objItem.SystemVariable)
-			    Case "True"
-			    	arrPathSys = Array(objItem.Name, objItem.SystemVariable, objItem.VariableValue)
-			    	strCntPathSys = strCntPathSys + 1
-			    Case "False"
-			    	arrPathUsr = Array(objItem.Name, objItem.SystemVariable, objItem.VariableValue)
-			    	strCntPathUsr = strCntPathUsr + 1
-			End Select
-		Else
-			strCntPathSys = 0
-			strCntPathUsr = 0
-		End If	
-	End If
+    If (StrComp(objItem.Name, "JAVA_HOME") = 0) Then
+        Select Case (objItem.SystemVariable)
+            Case "True"
+                arrJDKSys = Array(objItem.Name, objItem.VariableValue)
+                strCntJDKSys = strCntJDKSys + 1
+            Case "False"
+                arrJDKUsr = Array(objItem.Name, objItem.VariableValue)
+                strCntJDKUsr = strCntJDKUsr + 1
+        End Select
+    ElseIf (StrComp(objItem.Name, "JRE_HOME") = 0) Then
+        Select Case (objItem.SystemVariable)
+            Case "True"
+                arrJRESys = Array(objItem.Name, objItem.VariableValue)
+                strCntJRESys = strCntJDKSys + 1
+            Case "False"
+                arrJREUsr = Array(objItem.Name, objItem.VariableValue)
+                strCntJREUsr = strCntJDKUsr + 1
+        End Select
+    End If
+    
+    If (StrComp(objItem.Name, "Path") = 0) Then
+        If (IsJdkJreString(objItem.VariableValue, strCallType) <> "False") Then
+            Select Case (objItem.SystemVariable)
+                Case "True"
+                    arrPathSys = Array(objItem.Name, ExtractPathValue(objItem.VariableValue, strCallType))
+                    strCntPathSys = strCntPathSys + 1
+                Case "False"
+                    arrPathUsr = Array(objItem.Name, ExtractPathValue(objItem.VariableValue, strCallType))
+                    strCntPathUsr = strCntPathUsr + 1
+            End Select
+        Else
+            strCntPathSys = 0
+            strCntPathUsr = 0
+        End If
+    End If
 Next
 
-arrStrOut = Array(arrJDKSys,arrJRESys,arrJDKUsr,arrJREUsr,arrPathUsr,arrPathSys)
+arrStrOut = Array(arrJDKSys, arrJRESys, arrJDKUsr, arrJREUsr, arrPathUsr, arrPathSys)
 For Each arrFound In arrStrOut
-	If IsArray(arrFound) Then
-		If (arrFound(0) <> "")  Then
-			Call PublishJDKJRE(arrFound,"1")
-		End If
-	End If
+    If IsArray(arrFound) Then
+        If (arrFound(0) <> "") Then
+            Call PublishJDKJRE(arrFound, "1")
+        End If
+    End If
 Next
+
+Set colItems = Nothing
+Set objWMIService = Nothing
 
 End Sub
 
 
 
+'--------------------------------------------------
+' **** EXTRACT VALUE FROM SYS VARIABLES **** '
+'--------------------------------------------------
 Function ExtractPathValue(strFullPathValue, strValueType)
 
 strJavaPath = ""
 strStatPosRight = InStr(strFullPathValue, strValueType) + (Len(strValueType) - 1)
-strNew = Mid(strFullPathValue,1,strStatPosRight)
+strNew = Mid(strFullPathValue, 1, strStatPosRight)
 cntExtract = Len(strNew)
 
 For i = 1 To Len(strNew)
@@ -286,7 +293,7 @@ End Function
 
 
 
-Sub GetJavaWmiJSoftReg ()
+Sub GetJavaWmiJSoftReg()
 
 End Sub
 
@@ -354,5 +361,7 @@ End Sub
 '==================================================================
 '==================================================================
 '==================================================================
+
+
 
 
