@@ -1,12 +1,15 @@
 
-'====================================================================================================
-'user variables : HKEY_CURRENT_USER\Environment.
-'system variables : HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment.
-'====================================================================================================
+  'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\',
+  'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'
+
+'If WScript.Arguments.length = 0 Then
+'   Set objShell = CreateObject("Shell.Application")
+'   objShell.ShellExecute "cscript.exe", Chr(34) & WScript.ScriptFullName & Chr(34) & " uac", "", "runas", 3
+'      WScript.Quit
+'End If   
+
 
 Call ShowWelcomeBox()
-'Call ReadEnvVar("System", "PATH")
-'Call ListAllInstalledApps()
 
 Call GetInstalledJDKJRE ()
 Call GetJavaHomeVars ()
@@ -58,7 +61,10 @@ Const HKLM = &H80000002 'HKEY_LOCAL_MACHINE
 strComputer = "."
 strCallType = "CPanel"
 
-strKey = "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\"
+arrRegLoc = Array("SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\","SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\")
+'"HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\"
+'"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\"
+
 strEntry1a = "DisplayName"
 strEntry1b = "QuietDisplayName"
 strEntry2 = "InstallDate"
@@ -76,36 +82,36 @@ strJREFound = 0
 
 Set dictJDKJREOut = CreateObject("Scripting.Dictionary")
 Set objReg = GetObject("winmgmts://" & strComputer & "/root/default:StdRegProv")
- 
-objReg.EnumKey HKLM, strKey, arrSubkeys
 
-For Each strSubkey In arrSubkeys
-  
-  intRet1 = objReg.GetStringValue(HKLM, strKey & strSubkey, strEntry1a, strValue1)
-  If intRet1 <> 0 Then
-    objReg.GetStringValue HKLM, strKey & strSubkey, strEntry1b, strValue1
-  End If
-  
-  If strValue1 <> "" Then
-    strAppName = strValue1
-    objReg.GetDWORDValue HKLM, strKey & strSubkey, strEntry3, intValue3
-    objReg.GetDWORDValue HKLM, strKey & strSubkey, strEntry4, intValue4
-    strAppVersion = intValue3 & "." & intValue4
-    objReg.GetStringValue HKLM, strKey & strSubkey, strEntry2, strValue2
-    strAppDate = strValue2
-    objReg.GetStringValue HKLM, strKey & strSubkey, strEntry5, strValue5
-    strAppLoc = strValue5
-    If (InStr(strAppName, "Java") > 0) Then
-        Select Case IsJdkJreString(strAppName, strCallType)
-            Case "JDK"
-                arrJDK = ArrayFiller(arrJDKTemp, strAppName, strAppVersion, strAppDate, strAppLoc, strJDKFound)
-                strJDKFound = strJDKFound + 1
-            Case "JRE"
-                arrJRE = ArrayFiller(arrJRETemp, strAppName, strAppVersion, strAppDate, strAppLoc, strJREFound)
-                strJREFound = strJREFound + 1
-        End Select
-    End If
-  End If
+For Each strKey In arrRegLoc
+	If objReg.EnumKey (HKLM, strKey, arrSubkeys) = 0 Then 'success value is 0, meaning registry key exists
+		For Each strSubkey In arrSubkeys
+		  intRet1 = objReg.GetStringValue(HKLM, strKey & strSubkey, strEntry1a, strValue1)
+		  If intRet1 <> 0 Then
+		    objReg.GetStringValue HKLM, strKey & strSubkey, strEntry1b, strValue1
+		  End If
+		  If strValue1 <> "" Then
+		    strAppName = strValue1
+		    objReg.GetDWORDValue HKLM, strKey & strSubkey, strEntry3, intValue3
+		    objReg.GetDWORDValue HKLM, strKey & strSubkey, strEntry4, intValue4
+		    strAppVersion = intValue3 & "." & intValue4
+		    objReg.GetStringValue HKLM, strKey & strSubkey, strEntry2, strValue2
+		    strAppDate = strValue2
+		    objReg.GetStringValue HKLM, strKey & strSubkey, strEntry5, strValue5
+		    strAppLoc = strValue5
+		    If (InStr(strAppName, "Java") > 0) Then
+		        Select Case IsJdkJreString(strAppName, strCallType)
+		            Case "JDK"
+		                arrJDK = ArrayFiller(arrJDKTemp, strAppName, strAppVersion, strAppDate, strAppLoc, strJDKFound)
+		                strJDKFound = strJDKFound + 1
+		            Case "JRE"
+		                arrJRE = ArrayFiller(arrJRETemp, strAppName, strAppVersion, strAppDate, strAppLoc, strJREFound)
+		                strJREFound = strJREFound + 1
+		        End Select
+		    End If
+		  End If
+		Next
+	End If
 Next
 
   If strJDKFound = 0 Then
@@ -153,7 +159,6 @@ Select Case strCallType
         End If
 End Select
 
-
 End Function
 
 '-----------------------------------------
@@ -187,8 +192,9 @@ Select Case strDictType
     		Call ArrayIterator(oDataDict("JDK"), 3)
     		WScript.StdOut.WriteBlankLines(1)
     	Else
+    		WScript.StdOut.WriteLine(vbCrLf & "JDK INSTALLATIONS :-" & vbCrLf & "------------------")
     		WScript.StdOut.WriteBlankLines(1)
-    		WScript.StdOut.WriteLine ("NO JDK INSTALLATIONS FOUND IN REGISTRY AND CONTROL PANEL!")
+    		WScript.StdOut.WriteLine ("NO JDK INSTALLATIONS FOUND IN REGISTRY AND CONTROL PANEL..!")
     		WScript.StdOut.WriteBlankLines(1)
     	End If
     	If oDataDict.Exists("JRE") Then
@@ -196,6 +202,7 @@ Select Case strDictType
     		Call ArrayIterator(oDataDict("JRE"), 3)
     		WScript.StdOut.WriteBlankLines(1)
     	Else
+    		WScript.StdOut.WriteLine(vbCrLf & "JRE INSTALLATIONS :-" & vbCrLf & "-----------------")
     		WScript.StdOut.WriteBlankLines(1)
     		WScript.StdOut.WriteLine ("NO JRE INSTALLATIONS FOUND IN REGISTRY AND CONTROL PANEL ..!")
     		WScript.StdOut.WriteBlankLines(1)
@@ -232,6 +239,9 @@ Select Case strDictType
 	Case "pathvars"
     		WScript.StdOut.WriteBlankLines(1)
     		WScript.StdOut.WriteLine(vbCrLf & "PATH VARIABLES :-" & vbCrLf & "----------------")	
+		If oDataDict.Exists("NoPathVars") Then
+    		WScript.StdOut.WriteLine "NO JAVA PATH CURRENTLY SET IN 'PATH' VARIABLE ..!"
+    	End If
 		If oDataDict.Exists("javapath") Then
     		WScript.StdOut.WriteLine (oDataDict("javapath"))
     	End If
@@ -418,18 +428,19 @@ End Sub
 Public Sub ShowWelcomeBox()
 
 WScript.StdOut.WriteBlankLines(1)
-WScript.StdOut.Write "    "
-WScript.StdOut.Write " *************************************************************"
-WScript.StdOut.WriteBlankLines(2)
-WScript.StdOut.WriteLine VBTab & VBTab & "    " & "Windows JDK Manager version 1.0"
+WScript.StdOut.WriteLine "      " & "****************************************************************"
+WScript.StdOut.WriteLine "      " & "----------------------------------------------------------------"
 WScript.StdOut.WriteBlankLines(1)
-WScript.StdOut.WriteLine VBTab & vbTab & "Visual Basic Script Utility to View/Switch"
-WScript.StdOut.WriteLine VBTab & "   " & "Java Installation, Environment Variables & Registry"
+WScript.StdOut.WriteLine VBTab & vbTab & VBTab & "    " & "win-JDK-Manager v1.0"
+WScript.StdOut.WriteBlankLines(1)
+WScript.StdOut.WriteLine VBTab & "VBScript (WMI,WScript) Utility. View all installed JDK/JRE"
+WScript.StdOut.WriteLine vbTab & " " & "versions [32bit/64bit].Easily view and re-point Env Vars"
+WScript.StdOut.WriteLine VBTab & "    " & "Platform: Win7/8 | Pre-Req: Script/Admin Privilege"
 WScript.StdOut.WriteBlankLines(1)
 WScript.StdOut.WriteLine VBTab & "  " & "Last Updated: Wed, 15 May 2019 | Author: Tushar Sharma"
 WScript.StdOut.WriteBlankLines(1)
-WScript.StdOut.Write "    "
-WScript.StdOut.Write " *************************************************************"
+WScript.StdOut.WriteLine "      " & "****************************************************************"
+WScript.StdOut.WriteLine "      " & "----------------------------------------------------------------"
 WScript.StdOut.WriteBlankLines(2)
 
 End Sub
