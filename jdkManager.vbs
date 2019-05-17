@@ -14,7 +14,10 @@ Call ShowWelcomeBox()
 Call GetInstalledJDKJRE ()
 Call GetJavaHomeVars ()
 Call GetJavaPathVars()
+Call SelectFunction ()
 
+
+'###########################################################################
 
 
 '-----------------------------------------
@@ -50,6 +53,8 @@ Set objEnv = Nothing
 Set objShell = Nothing
 
 End Sub
+
+'###########################################################################
 
 
 '--------------------------------------------------
@@ -133,6 +138,9 @@ Set GetInstalledJDKJRE = dictJDKJREOut
 
 End Function
 
+'###########################################################################
+
+
 '---------------------------------------------------
 ' **** EVALUATE IF JDK/JRE VALUES FOUND IN STRING **** '
 '---------------------------------------------------
@@ -161,6 +169,9 @@ End Select
 
 End Function
 
+'###########################################################################
+
+
 '-----------------------------------------
 ' **** FILL JDK/JRE ARRAY **** '
 '-----------------------------------------
@@ -174,6 +185,9 @@ arrJDKJRE(3, strJDKJREFound) = strAppLoc
 ArrayFiller = arrJDKJRE
 
 End Function
+
+'###########################################################################
+
 
 '-----------------------------------------
 ' **** PUBLISH OUTPUT **** '
@@ -259,6 +273,7 @@ End Select
 
 End Sub
 
+'###########################################################################
 
 
 Sub ArrayIterator(arrDataObj, strDimension)
@@ -277,6 +292,8 @@ Select Case strDimension
 End Select
 
 End Sub
+
+'###########################################################################
 
 
 '--------------------------------------------------
@@ -341,6 +358,8 @@ Set objWMIService = Nothing
 End Function
 
 
+'###########################################################################
+
 '--------------------------------------------------
 ' **** LIST PATH ENV VARAIABLES **** '
 '--------------------------------------------------
@@ -382,6 +401,7 @@ Set objWMIService = Nothing
 
 End Function
 
+'###########################################################################
 
 '--------------------------------------------------
 ' **** EXTRACT VALUE FROM SYS VARIABLES **** '
@@ -418,12 +438,13 @@ ExtractPathValue = StrReverse(strJavaPath)
 End Function
 
 
-
+'###########################################################################
 
 Sub GetJavaWmiJSoftReg()
 
 End Sub
 
+'###########################################################################
 
 Public Sub ShowWelcomeBox()
 
@@ -444,6 +465,33 @@ WScript.StdOut.WriteLine "      " & "-------------------------------------------
 WScript.StdOut.WriteBlankLines(2)
 
 End Sub
+
+'###########################################################################
+
+Public Function ConsoleInput()
+ConsoleInput = WScript.StdIn.ReadLine
+End Function
+
+'###########################################################################
+
+
+Public Function SelectFunction()
+Dim strFun
+
+WScript.StdOut.WriteBlankLines(1)
+WScript.StdOut.WriteLine "SELECT FUNCTION TO PERFORM? [Eg. Type 1 for Setting JAVA_HOME]"
+WScript.StdOut.WriteBlankLines(1)
+WScript.StdOut.WriteLine "1. Set JAVA_HOME Env Variable"
+WScript.StdOut.WriteLine "2. Set JRE_HOME Env Variable"
+WScript.StdOut.WriteLine "3. Set PATH Env Variable"
+WScript.StdOut.WriteBlankLines(1)
+WScript.StdOut.WriteLine "Tip: Type a number from above and hit Enter."
+WScript.StdOut.WriteBlankLines(1)
+
+strFun = ConsoleInput()
+SelectFunction = strFun
+
+End Function
 
 
 '==================================================================
