@@ -6,16 +6,16 @@ VBScript (WMI,WScript) Utility with Interactive cmd Interface. Enables to view a
 
 Simply double-click the main script file named 'jdkManager.vbs' to launch the utility. This will launch the command line interface.
 
-### Prerequisites
+## Prerequisites
 
 Win 7 / 8 / Server.
 
-Make sure you have admin privileges / script execution privileges on your windows system.
+Require admin privileges / script execution privileges on your windows system.
 
 ## Built With
 
 * [VBScript](https://docs.microsoft.com/en-us/dotnet/visual-basic/language-reference/)
-* [WScript](https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc738350(v=ws.10))
+* [WScript](https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc738350(v=ws.10)) 
 * [WMI](https://docs.microsoft.com/en-us/windows/desktop/wmisdk/using-wmi)
 
 ## Authors
