@@ -22,7 +22,6 @@ Require admin privileges / script execution privileges on your windows system.
 
 * **Tushar Sharma**
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
 ### License
 
