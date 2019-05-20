@@ -25,6 +25,7 @@
 
 'If WScript.Arguments.length = 0 Then
 '   Set objShell = CreateObject("Shell.Application")
+'	objShell.ShellExecute cls
 '   objShell.ShellExecute "cscript.exe", Chr(34) & WScript.ScriptFullName & Chr(34) & " uac", "", "runas", 3
 '      WScript.Quit
 'End If   
@@ -35,6 +36,12 @@ Dim dictHomeVars
 Dim dictPathVars
 Dim strSelectedOption
 
+Const installedjava = "installedjava"
+Const homevars = "homevars"
+Const pathvars = "pathvars"
+
+Const JDK = "JDK"
+Const JRE = "JRE"
 Const strJavaHome = "JAVA_HOME"
 Const strJreHome = "JRE_HOME"
 Const strPathEnvVar = "Path"
@@ -63,7 +70,12 @@ Const jrehomeusr = "jrehomeusr"
 Call ShowWelcomeBox()
 Set dictInstalledJDKKRE = GetInstalledJDKJRE ()
 Set dictHomeVars = GetJavaHomeVars ()
-Set dictPathVars = GetJavaPathVars()
+Set dictPathVars = GetJavaPathVars ()
+
+Call PublishJDKJRE (dictInstalledJDKKRE, installedjava)
+Call PublishJDKJRE (dictHomeVars, homevars)
+Call PublishJDKJRE (dictPathVars, pathvars)
+
 
 If Not(dictInstalledJDKKRE.Exists("NoJDK")) And Not(dictInstalledJDKKRE.Exists("NoJRE")) Then
 	strSelectedOption = ShowUserOptions(FoundJdkJre)
@@ -74,7 +86,6 @@ End If
 
 
 
-'Call ShowUserOptions ()
 
 Call ExitApp()
 
@@ -113,22 +124,17 @@ Dim strVarType
 Set objShell = CreateObject("WScript.Shell")
 Set objEnv = objShell.Environment(strEnvVarType) ' envVarType= System or User
 
-
+'strNewVarValue = Replace(strOldVarValue,strVarType,strEnvVarValue) ' dont use replace for home vars only for path
 Select Case strEnvVarName
     Case strJavaHome
     	Select Case strWriteType
     	    Case strWriteTypeReplace
 	    		strOldVarValue = objEnv(strEnvVarName)
-	    		MsgBox strOldVarValue
-	    		If strEnvVarType = javahomesys Then
-	    			strVarType = dictHomeVars.item(javahomesys)
-	    		Else
-	    			strVarType = dictHomeVars.item(javahomeusr) 
-	    		End If	
-	    		'strNewVarValue = Replace(strOldVarValue,strVarType,strEnvVarValue) ' dont use replace for home vars only for path
 	    		strNewVarValue = strEnvVarValue
 	    		objEnv(strEnvVarName) = strNewVarValue
-	    		MsgBox strNewVarValue
+	    		WScript.StdOut.WriteBlankLines(1)
+				WScript.StdOut.WriteLine "SETTING " & strEnvVarName & " TO " & strNewVarValue & " ... DONE!"
+				WScript.StdOut.WriteBlankLines(1)
     	    Case strWriteTypeAppend
 '    	    	{statements2}
 			Case strWriteTypeAddNew
@@ -209,12 +215,15 @@ For Each strKey In arrRegLoc
 		    strAppDate = strValue2
 		    objReg.GetStringValue HKLM, strKey & strSubkey, strEntry5, strValue5
 		    strAppLoc = strValue5
+		    If (StrComp(Right(strAppLoc,1),"\") = 0) Then
+		    	strAppLoc = Mid(strAppLoc,1,Len(strAppLoc)-1)
+		    End if
 		    If (InStr(strAppName, "Java") > 0) Then
 		        Select Case IsJdkJreString(strAppName, strCallType)
-		            Case "JDK"
+		            Case JDK
 		                arrJDK = ArrayFiller(arrJDKTemp, strAppName, strAppVersion, strAppDate, strAppLoc, strJDKFound)
 		                strJDKFound = strJDKFound + 1
-		            Case "JRE"
+		            Case JRE
 		                arrJRE = ArrayFiller(arrJRETemp, strAppName, strAppVersion, strAppDate, strAppLoc, strJREFound)
 		                strJREFound = strJREFound + 1
 		        End Select
@@ -236,7 +245,6 @@ Next
     dictJDKJREOut.Add "JRE", arrJRE
   End If
 
-Call PublishJDKJRE (dictJDKJREOut, "installedjava") ' **** DELETE THIS ****
 
 Set objReg = Nothing
 Set GetInstalledJDKJRE = dictJDKJREOut
@@ -258,9 +266,9 @@ strTypeCpath = "CPanel"
 Select Case strCallType
     Case strTypeCpath
         If (InStr(1, strJdkJre, strJDK) <> 0) Then
-            IsJdkJreString = "JDK"
+            IsJdkJreString = JDK
         ElseIf (IsNumeric(Mid(strJdkJre, 6, 1))) Then
-            IsJdkJreString = "JRE"
+            IsJdkJreString = JRE
         Else
             IsJdkJreString = False
         End If
@@ -299,15 +307,13 @@ End Function
 '-----------------------------------------
 
 Sub PublishJDKJRE (oDataDict, strDictType)
+Dim strTemp
 
 Select Case strDictType
     
-    Case "installedjava"  	
-    	WScript.StdOut.WriteBlankLines(1)
-'    	WScript.StdOut.WriteLine("==================================" & vbCrLf & "JAVA INSTALLATIONS FOUND ON SYSTEM" & vbCrLf & "==================================")
-'    	WScript.StdOut.WriteBlankLines(1)
-    	
-    	If oDataDict.Exists("JDK") Then
+    Case installedjava 	
+    	WScript.StdOut.WriteBlankLines(1) 	
+    	If oDataDict.Exists(JDK) Then
     		WScript.StdOut.WriteLine(vbCrLf & "JDK INSTALLATIONS FOUND ON SYSTEM :-" & vbCrLf & "----------------------------------")
     		WScript.StdOut.WriteBlankLines(1)
     		Call ArrayIterator(oDataDict("JDK"), 3)
@@ -318,7 +324,7 @@ Select Case strDictType
     		WScript.StdOut.WriteLine ("NO JDK INSTALLATIONS FOUND IN REGISTRY AND CONTROL PANEL..!")
     		WScript.StdOut.WriteBlankLines(1)
     	End If
-    	If oDataDict.Exists("JRE") Then
+    	If oDataDict.Exists(JRE) Then
     		WScript.StdOut.WriteLine(vbCrLf & "JRE INSTALLATIONS FOUND ON SYSTEM :-" & vbCrLf & "---------------------------------")
     		WScript.StdOut.WriteBlankLines(1)
     		Call ArrayIterator(oDataDict("JRE"), 3)
@@ -329,57 +335,63 @@ Select Case strDictType
     		WScript.StdOut.WriteLine ("NO JRE INSTALLATIONS FOUND IN REGISTRY AND CONTROL PANEL ..!")
     		WScript.StdOut.WriteBlankLines(1)
     	End If
-	Case "homevars"
+	Case homevars
 		    WScript.StdOut.WriteBlankLines(2)
-'		    WScript.StdOut.WriteLine("==================================" & vbCrLf & "ENVIRONMENT VARIABLES CURRENTLY SET" & vbCrLf & "==================================")
-'    		WScript.StdOut.WriteBlankLines(1)
     		WScript.StdOut.WriteLine(vbCrLf & "SYSTEM VARIABLES CURRENTLY SET:-" & vbCrLf & "------------------------------")
     		WScript.StdOut.WriteBlankLines(1)    		
-    	If oDataDict.Exists("javahomesys") Then
-    		WScript.StdOut.WriteLine "JAVA_HOME = " & oDataDict.Item("javahomesys")
+    	If oDataDict.Exists(javahomesys) Then
+    		strTemp = oDataDict.Item(javahomesys)
+    		WScript.StdOut.WriteLine "JAVA_HOME = " & strTemp
     	Else
     		WScript.StdOut.WriteLine ("JAVA_HOME = CURRENTLY NOT SET ..!")
     	End If
-    	If oDataDict.Exists("jrehomesys") Then
-    		WScript.StdOut.WriteLine "JRE_HOME = " & oDataDict.Item("jrehomesys")
+    	If oDataDict.Exists(jrehomesys) Then
+    	    strTemp = oDataDict.Item(jrehomesys)
+    		WScript.StdOut.WriteLine "JRE_HOME = " & strTemp
     	Else
     		WScript.StdOut.WriteLine ("JRE_HOME = CURRENTLY NOT SET ..!")
     	End If
     		WScript.StdOut.WriteBlankLines(2)
     		WScript.StdOut.WriteLine(vbCrLf & "USER VARIABLES CURRENTLY SET :-" & vbCrLf & "----------------------------")
     		WScript.StdOut.WriteBlankLines(1)    		
-    	If oDataDict.Exists("javahomeusr") Then
-    		WScript.StdOut.WriteLine "JAVA_HOME" & oDataDict.Item("javahomeusr")
+    	If oDataDict.Exists(javahomeusr) Then
+    		strTemp = oDataDict.Item(javahomeusr)
+    		MsgBox strTemp
+    		WScript.StdOut.WriteLine "JAVA_HOME = " & strTemp 
     	Else
     		WScript.StdOut.WriteLine ("JAVA_HOME = CURRENTLY NOT SET ..!")
     	End If
-    	If oDataDict.Exists("jrehomeusr") Then
-    	   WScript.StdOut.WriteLine "JAVA_HOME" & oDataDict.Item("jrehomeusr")
+    	If oDataDict.Exists(jrehomeusr) Then
+    		strTemp = oDataDict.Item(jrehomeusr)
+    	   WScript.StdOut.WriteLine "JAVA_HOME = " & strTemp 
     	Else
     		WScript.StdOut.WriteLine ("JRE_HOME = CURRENTLY NOT SET ..!")
     		WScript.StdOut.WriteBlankLines(1)
     	End If    	
     	WScript.StdOut.WriteBlankLines(1)
-	Case "pathvars"
+	Case pathvars
     		WScript.StdOut.WriteLine(vbCrLf & "PATH VARIABLES CURRENTLY SET :-" & vbCrLf & "----------------------------")	
     		WScript.StdOut.WriteBlankLines(1)
 		If oDataDict.Exists("NoPathVars") Then
-    		WScript.StdOut.WriteLine "NO JAVA PATH CURRENTLY SET IN 'PATH' VARIABLE ..!"
-    	End If
-		If oDataDict.Exists("javapath") Then
-    		WScript.StdOut.WriteLine (oDataDict("javapath"))
-    	End If
-    	If oDataDict.Exists("%JAVA_HOME%\bin") Then
-    		WScript.StdOut.WriteLine (oDataDict("%JAVA_HOME%\bin"))
-    	End If
-    	If oDataDict.Exists("jdk") Then
-    		WScript.StdOut.WriteLine (oDataDict("jdk"))
-    	End If
-    	If oDataDict.Exists("jre") Then
-    		WScript.StdOut.WriteLine (oDataDict("jre"))
+			WScript.StdOut.WriteLine "PATH VARIABLE CURRENTLY NOT SET ..!"
+    	ElseIf oDataDict.Exists("NoJavaPathVars") Then
+    		WScript.StdOut.WriteLine "NO 'JAVA' PATH CURRENTLY SET IN 'PATH' VARIABLE ..!"
+		ElseIf oDataDict.Exists("javapath") Then
+			strTemp = oDataDict.Item("javapath")
+    		WScript.StdOut.WriteLine strTemp
+    	ElseIf oDataDict.Exists("%JAVA_HOME%\bin") Then
+    		strTemp = oDataDict.Item("%JAVA_HOME%\bin")
+    		WScript.StdOut.WriteLine strTemp    	
+    	ElseIf oDataDict.Exists("jdk") Then
+    		strTemp = oDataDict.Item("jdk")
+    		WScript.StdOut.WriteLine strTemp
+    	ElseIf oDataDict.Exists("jre") Then
+    		strTemp = oDataDict.Item("jre")
+    		WScript.StdOut.WriteLine strTemp
     	End If
 		WScript.StdOut.WriteBlankLines(2)
 End Select
+
 
 End Sub
 
@@ -467,8 +479,6 @@ Else
 	GetJavaHomeVars = False
 End If
 
-Call PublishJDKJRE (dictJavaVarOut, "homevars") '**** DELETE THIS ****
-
 Set colItems = Nothing
 Set objWMIService = Nothing
 
@@ -485,32 +495,39 @@ Function GetJavaPathVars()
 Dim strExtPath, dictJavaPathOut
 strComputer = "."
 
+strCountFound = 0
+strPathEnvSet = 0
 
 Set objWMIService = GetObject("winmgmts:" & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
 Set colItems = objWMIService.ExecQuery("Select * from Win32_Environment")
 Set dictJavaPathOut = CreateObject("scripting.dictionary")
 
-For Each objItem In colItems
+For Each objItem In colItems    
     If (StrComp(objItem.Name, strPathEnvVar) = 0) Then
+    	strPathEnvSet = strPathEnvSet + 1
         For Each strExp In arrPathTypes
         If (InStr(objItem.VariableValue, strExp) <> 0) Then
             strExtPath = ExtractPathValue(objItem.VariableValue, strExp)
             If strExtPath <> False Then
                 dictJavaPathOut.Add strExp, strExtPath
+                strCountFound = strCountFound + 1
             End If
         End If
         Next
     End If
 Next
 
-If (dictJavaPathOut.Count) > 0 Then
+If (strPathEnvSet = 0) Then
+	dictJavaPathOut.Add "NoPathVars", "No Path Vars Found" 
+	Set GetJavaPathVars = dictJavaPathOut
+ElseIf (strCountFound = 0) Then
+	dictJavaPathOut.Add "NoJavaPathVars", "No Path Vars Found" 
 	Set GetJavaPathVars = dictJavaPathOut
 Else 
-	dictJavaPathOut.Add "NoPathVars", "No Path Vars Found" 
-	GetJavaPathVars = False
+	Set GetJavaPathVars = dictJavaPathOut
 End If
 
-Call PublishJDKJRE (dictJavaPathOut, "pathvars") '**** DELETE THIS ****
+'Call PublishJDKJRE (dictJavaPathOut, "pathvars") '**** DELETE THIS ****
 
 Set colItems = Nothing
 Set objWMIService = Nothing
@@ -556,7 +573,7 @@ End Function
 
 '###########################################################################
 
-Sub ParseAndCallSetter(strOptionInput)
+Sub ParseAndCallSetter(strOptionInput) 'javahome
 
 Dim arrJDK, arrJRE
 Dim strSelectedJDK, strValue, strVarType
@@ -566,11 +583,15 @@ Select Case strOptionInput
     	arrJDK = dictInstalledJDKKRE.Item("JDK")
     	strSelectedJDK = ShowJDKOptions(arrJDK)
     	strValue = arrJDK(3,strSelectedJDK)
-    	If dictHomeVars.Exists("javahomesys") Or dictHomeVars.Exists("javahomeusr") Then
+    	If dictHomeVars.Exists(javahomesys) Or dictHomeVars.Exists(javahomeusr) Then
     		WriteEnvVar strVarTypeSys,strJavaHome,strValue, strWriteTypeReplace
     	Else
     		WriteEnvVar strVarTypeSys,strJavaHome,strValue, strWriteTypeAddNew
     	End If
+		WScript.StdOut.WriteLine "VERIFYING, IF CHANGES HAVE PERSISTED ... "
+		WScript.StdOut.WriteBlankLines(1)
+		WScript.StdOut.WriteLine "CURRENT STATUS POST-CHANGES BELOW ... "
+		Call PublishJDKJRE (GetJavaHomeVars(), homevars)
     	
 
 End Select
@@ -722,8 +743,6 @@ Dim strUsrInput
 	Else
 		Error
 	End If
-
-MsgBox ShowJDKOptions
 
 End Function
 
