@@ -68,9 +68,9 @@ Const jrehomeusr = "jrehomeusr"
 
 
 Call ShowWelcomeBox()
-Set dictInstalledJDKKRE = GetInstalledJDKJRE ()
-Set dictHomeVars = GetJavaHomeVars ()
-Set dictPathVars = GetJavaPathVars ()
+Call GetInstalledJDKJRE ()
+Call GetJavaHomeVars ()
+Call GetJavaPathVars ()
 
 Call PublishJDKJRE (dictInstalledJDKKRE, installedjava)
 Call PublishJDKJRE (dictHomeVars, homevars)
@@ -247,6 +247,7 @@ Next
 
 
 Set objReg = Nothing
+Set dictInstalledJDKKRE = dictJDKJREOut 
 Set GetInstalledJDKJRE = dictJDKJREOut
 
 End Function
@@ -473,11 +474,14 @@ End If
 
 
 If (dictJavaVarOut.Count) > 0 Then
+	Set dictHomeVars = dictJavaVarOut
 	Set GetJavaHomeVars = dictJavaVarOut
 Else
+	' ELABORATE THIS. ITS USEFUL IN CASE NONE OF THE VARIABLE ARE SET OR DISCOVERED
 	dictJavaVarOut.Add "NoVars", "No Vars Found" 
 	GetJavaHomeVars = False
 End If
+
 
 Set colItems = Nothing
 Set objWMIService = Nothing
@@ -519,11 +523,14 @@ Next
 
 If (strPathEnvSet = 0) Then
 	dictJavaPathOut.Add "NoPathVars", "No Path Vars Found" 
+	Set dictPathVars = dictJavaPathOut
 	Set GetJavaPathVars = dictJavaPathOut
 ElseIf (strCountFound = 0) Then
 	dictJavaPathOut.Add "NoJavaPathVars", "No Path Vars Found" 
+		Set dictPathVars = dictJavaPathOut
 	Set GetJavaPathVars = dictJavaPathOut
 Else 
+	Set dictPathVars = dictJavaPathOut
 	Set GetJavaPathVars = dictJavaPathOut
 End If
 
