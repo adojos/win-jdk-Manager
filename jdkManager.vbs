@@ -16,7 +16,7 @@
 '# https://support.microsoft.com/en-us/help/974524/event-log-message-indicates-that-the-windows-installer-reconfigured-al
 '#
 '# PLATFORM: Win7/8/Server | PRE-REQ: Script/Admin Privilege
-'# LAST UPDATED: Wed, 17 May 2019 | AUTHOR: Tushar Sharma
+'# LAST UPDATED: Wed, 23 May 2019 | AUTHOR: Tushar Sharma
 '##################################################################################################
 
 
@@ -25,7 +25,6 @@
 
 'If WScript.Arguments.length = 0 Then
 '   Set objShell = CreateObject("Shell.Application")
-'	objShell.ShellExecute cls
 '   objShell.ShellExecute "cscript.exe", Chr(34) & WScript.ScriptFullName & Chr(34) & " uac", "", "runas", 3
 '      WScript.Quit
 'End If   
@@ -82,35 +81,38 @@ Call PublishJDKJRE (dictPathVars, pathvars)
 
 If Not(dictInstalledJDKKRE.Exists("NoJDK")) And Not(dictInstalledJDKKRE.Exists("NoJRE")) Then
 	strSelectedOption = ShowUserOptions(FoundJdkJre)
-	If (strSelectedOption = strAllEnvVar) Then
-		ParseAndCallSetter(strJavaHome)
-		ParseAndCallSetter(strJreHome)
-		ParseAndCallSetter(strPathEnvVar)
-	ElseIf strSelectedOption = strAllEnvVar Then
-		ParseAndCallSetter(strSelectedOption)
-	ElseIf strSelectedOption = strExit Then
-		Call ExitApp()
-	End If
+	Select Case strSelectedOption
+	    Case strExit
+	    	Call ExitApp()
+	    Case strAllEnvVar
+			ParseAndCallSetter(strJavaHome)
+			ParseAndCallSetter(strJreHome)
+			ParseAndCallSetter(strPathEnvVar)
+	    Case Else
+	    	ParseAndCallSetter(strSelectedOption)
+	End Select
 ElseIf Not(dictInstalledJDKKRE.Exists("NoJDK"))  And (dictInstalledJDKKRE.Exists("NoJRE")) Then
 	strSelectedOption = ShowUserOptions(FoundJdk)
-	If (strSelectedOption = strJavaHomePathEnvVar) Then
-		ParseAndCallSetter(strJavaHome)
-		ParseAndCallSetter(strPathEnvVar)
-	ElseIf strSelectedOption = strExit Then
-		Call ExitApp()	
-	Else
-		ParseAndCallSetter(strSelectedOption)
-	End If
+	Select Case strSelectedOption
+	    Case strExit
+	    	Call ExitApp()
+	    Case strJavaHomePathEnvVar
+			ParseAndCallSetter(strJavaHome)
+			ParseAndCallSetter(strPathEnvVar)
+	    Case Else
+	    	ParseAndCallSetter(strSelectedOption)
+	End Select
 ElseIf (dictInstalledJDKKRE.Exists("NoJDK"))  And Not(dictInstalledJDKKRE.Exists("NoJRE")) Then
 		strSelectedOption = ShowUserOptions(FoundJre)
-		If 	strSelectedOption = strExit Then
-			Call ExitApp()
-		Else 
-			ParseAndCallSetter(strSelectedOption)
-		End If
+		Select Case strSelectedOption
+		    Case strExit
+		    	Call ExitApp()
+		    Case Else
+		    	ParseAndCallSetter(strSelectedOption)
+		End Select
 ElseIf (dictInstalledJDKKRE.Exists("NoJDK"))  And (dictInstalledJDKKRE.Exists("NoJRE")) Then
-		strSelectedOption = ShowUserOptions(FoundNone)
-		ParseAndCallSetter(strSelectedOption)
+		Call ShowUserOptions(FoundNone)
+		Call ExitApp()
 End If 
 
 
@@ -433,6 +435,7 @@ Select Case strDictType
     	End If    	
     	WScript.StdOut.WriteBlankLines(1)
 	Case pathvars
+			WScript.StdOut.WriteBlankLines(2)
     		WScript.StdOut.WriteLine(vbCrLf & "PATH VARIABLES CURRENTLY SET :-" & vbCrLf & "----------------------------")	
     		WScript.StdOut.WriteBlankLines(1)
 		If oDataDict.Exists("NoPathVars") Then
@@ -740,7 +743,7 @@ WScript.StdOut.WriteLine VBTab & "VBScript (WMI,WScript) Utility. View all insta
 WScript.StdOut.WriteLine vbTab & " " & "versions [32bit/64bit].Easily view and re-point Env Vars"
 WScript.StdOut.WriteLine VBTab & "    " & "Platform: Win7/8 | Pre-Req: Script/Admin Privilege"
 WScript.StdOut.WriteBlankLines(1)
-WScript.StdOut.WriteLine VBTab & "  " & "Last Updated: Wed, 15 May 2019 | Author: Tushar Sharma"
+WScript.StdOut.WriteLine VBTab & "  " & "Last Updated: Wed, 23 May 2019 | Author: Tushar Sharma"
 WScript.StdOut.WriteBlankLines(1)
 WScript.StdOut.WriteLine "      " & "****************************************************************"
 WScript.StdOut.WriteLine "      " & "----------------------------------------------------------------"
@@ -769,21 +772,21 @@ End Sub
 
 Function ShowUserOptions(strShowOption)
 Dim strUsrInput
-WScript.StdOut.WriteBlankLines(1)
-WScript.StdOut.Write "~~~~~~~~~~   ~~~~~~~~~~   STARTING <INTERACTIVE MODE>   ~~~~~~~~~~   ~~~~~~~~~~ "
+WScript.StdOut.WriteBlankLines(2)
+WScript.StdOut.Write "             ~~~~~~~~~~   STARTING <INTERACTIVE MODE>   ~~~~~~~~~~              "
 WScript.StdOut.WriteBlankLines(2)
 
 Select Case strShowOption
     Case FoundJdkJre
 		WScript.StdOut.WriteBlankLines(1)
-		WScript.StdOut.WriteLine "CHOOSE ONE OF THE BELOW AVAILABLE OPTIONS"
-		WScript.StdOut.WriteBlankLines(1)
-		WScript.StdOut.WriteLine "1. Set JAVA_HOME (SYSTEM) Env Variable Only ?"
-		WScript.StdOut.WriteLine "2. Set JRE_HOME (SYSTEM) Env Variable Only ?"
-		WScript.StdOut.WriteLine "3. Set PATH (SYSTEM) Env Variable Only ?"
-		WScript.StdOut.WriteLine "4. Set all above i.e. JAVA_HOME, JRE_HOME and PATH ?"
-		WScript.StdOut.WriteLine "5. Cancel and Exit ?"
-		WScript.StdOut.WriteBlankLines(1)
+		WScript.StdOut.WriteLine "CHOOSE ONE OF THE BELOW AVAILABLE OPTIONS [Eg. Choose 1 for Setting JAVA_HOME]"
+		WScript.StdOut.WriteBlankLines(2)
+		WScript.StdOut.WriteLine "[1] Set JAVA_HOME (SYSTEM) Env Variable Only ?" & vbCrLf
+		WScript.StdOut.WriteLine "[2] Set JRE_HOME (SYSTEM) Env Variable Only ?" & vbCrLf
+		WScript.StdOut.WriteLine "[3] Set PATH (SYSTEM) Env Variable Only ?" & vbCrLf
+		WScript.StdOut.WriteLine "[4] Set all above i.e. JAVA_HOME, JRE_HOME and PATH ?" & vbCrLf
+		WScript.StdOut.WriteLine "[5] Cancel and Exit ?"
+		WScript.StdOut.WriteBlankLines(2)
 		WScript.StdOut.WriteLine "Tip: Type a bullet number from above and hit Enter."
 		WScript.StdOut.WriteBlankLines(1)
 	Case FoundJdk
@@ -799,7 +802,7 @@ Select Case strShowOption
 		WScript.StdOut.WriteBlankLines(1)
 	Case FoundJre
 		WScript.StdOut.WriteBlankLines(1)
-		WScript.StdOut.WriteLine "CHOOSE ONE OF THE BELOW AVAILABLE OPTIONS? [Eg. Choose 1 for Setting JAVA_HOME]"
+		WScript.StdOut.WriteLine "CHOOSE ONE OF THE BELOW AVAILABLE OPTIONS? [Eg. Choose 1 for Setting JRE_HOME]"
 		WScript.StdOut.WriteBlankLines(1)
 		WScript.StdOut.WriteLine "1. Set JRE_HOME (SYSTEM) Env Variable Only ?"
 		WScript.StdOut.WriteLine "2. Cancel and Exit ?"
@@ -897,20 +900,6 @@ End Select
 	Else
 		Error
 	End If
-
-End Function
-
-'###########################################################################
-
-Function ShowJREOptions()
-
-
-End Function
-
-'###########################################################################
-
-Function ShowPathOptions()
-
 
 End Function
 
