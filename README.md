@@ -2,6 +2,8 @@
 
 VBScript (WMI,WScript) Utility with Interactive cmd Interface. Enables to view all  installed JDK/JRE versions [32bit/64bit]. One-touch easy view and re-point JAVA Env Variables on Windows. Just double click to launch !
 
+Being built on Windows native technologies, it does not has any dependency on third party compiler / interpreters or engines (java, nodejs or other such runtimes).
+
 ### How To run
 
 Simply double-click the main script file named 'jdkManager.vbs' to launch the utility. This will launch the command line interface.
