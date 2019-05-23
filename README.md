@@ -26,6 +26,5 @@ Require admin privileges / script execution privileges on your windows system.
 
 ### License
 
-This is licensed under the MIT License - see the [LICENSE.md](win-jdk-Manager
-/LICENSE.md) file for details
+This is licensed under the MIT License - see the [LICENSE.md](https://github.com/testoxide/win-jdk-Manager/blob/master/LICENSE) file for details
 
