@@ -46,6 +46,8 @@ Const strJavaHome = "JAVA_HOME"
 Const strJreHome = "JRE_HOME"
 Const strPathEnvVar = "Path"
 Const strJavaHomePathEnvVar = "JavaHomePathEnvVar"
+Const NoPathVars = "NoPathVars"
+Const NoJavaPathVars = "NoJavaPathVars"
 Const strAllEnvVar = "strAllEnvVar"
 arrPathTypes = Array("javapath", "%JAVA_HOME%\bin", "jdk", "jre")
 
@@ -54,6 +56,7 @@ Const FoundJdk = "FoundJdk"
 Const FoundJre = "FoundJre"
 Const FoundPath = "FoundPath"
 Const FoundNone = "FoundNone"
+Const strExit = "strExit"
 
 Const strVarTypeSys = "System"
 Const strVarTypeUsr = "User"
@@ -79,12 +82,36 @@ Call PublishJDKJRE (dictPathVars, pathvars)
 
 If Not(dictInstalledJDKKRE.Exists("NoJDK")) And Not(dictInstalledJDKKRE.Exists("NoJRE")) Then
 	strSelectedOption = ShowUserOptions(FoundJdkJre)
-	ParseAndCallSetter(strSelectedOption)
-
+	If (strSelectedOption = strAllEnvVar) Then
+		ParseAndCallSetter(strJavaHome)
+		ParseAndCallSetter(strJreHome)
+		ParseAndCallSetter(strPathEnvVar)
+	ElseIf strSelectedOption = strAllEnvVar Then
+		ParseAndCallSetter(strSelectedOption)
+	ElseIf strSelectedOption = strExit Then
+		Call ExitApp()
+	End If
+ElseIf Not(dictInstalledJDKKRE.Exists("NoJDK"))  And (dictInstalledJDKKRE.Exists("NoJRE")) Then
+	strSelectedOption = ShowUserOptions(FoundJdk)
+	If (strSelectedOption = strJavaHomePathEnvVar) Then
+		ParseAndCallSetter(strJavaHome)
+		ParseAndCallSetter(strPathEnvVar)
+	ElseIf strSelectedOption = strExit Then
+		Call ExitApp()	
+	Else
+		ParseAndCallSetter(strSelectedOption)
+	End If
+ElseIf (dictInstalledJDKKRE.Exists("NoJDK"))  And Not(dictInstalledJDKKRE.Exists("NoJRE")) Then
+		strSelectedOption = ShowUserOptions(FoundJre)
+		If 	strSelectedOption = strExit Then
+			Call ExitApp()
+		Else 
+			ParseAndCallSetter(strSelectedOption)
+		End If
+ElseIf (dictInstalledJDKKRE.Exists("NoJDK"))  And (dictInstalledJDKKRE.Exists("NoJRE")) Then
+		strSelectedOption = ShowUserOptions(FoundNone)
+		ParseAndCallSetter(strSelectedOption)
 End If 
-
-
-
 
 
 Call ExitApp()
@@ -124,7 +151,6 @@ Dim strVarType
 Set objShell = CreateObject("WScript.Shell")
 Set objEnv = objShell.Environment(strEnvVarType) ' envVarType= System or User
 
-'strNewVarValue = Replace(strOldVarValue,strVarType,strEnvVarValue) ' dont use replace for home vars only for path
 Select Case strEnvVarName
     Case strJavaHome
     	Select Case strWriteType
@@ -135,16 +161,52 @@ Select Case strEnvVarName
 	    		WScript.StdOut.WriteBlankLines(1)
 				WScript.StdOut.WriteLine "SETTING " & strEnvVarName & " TO " & strNewVarValue & " ... DONE!"
 				WScript.StdOut.WriteBlankLines(1)
-    	    Case strWriteTypeAppend
-'    	    	{statements2}
 			Case strWriteTypeAddNew
-'   	    	{statements2}
+	    		objEnv(strEnvVarName) = strEnvVarValue
+	    		WScript.StdOut.WriteBlankLines(1)
+				WScript.StdOut.WriteLine "CREATING " & strEnvVarName & " AND SETTING TO " & strEnvVarValue & " ... DONE!"
+				WScript.StdOut.WriteBlankLines(1)
     	End Select
-    	 	
+    	
     Case strJreHome
-    
+    	Select Case strWriteType
+    	    Case strWriteTypeReplace
+	    		strOldVarValue = objEnv(strEnvVarName)
+	    		strNewVarValue = strEnvVarValue
+	    		objEnv(strEnvVarName) = strNewVarValue
+	    		WScript.StdOut.WriteBlankLines(1)
+				WScript.StdOut.WriteLine "SETTING " & strEnvVarName & " TO " & strNewVarValue & " ... DONE!"
+				WScript.StdOut.WriteBlankLines(1)
+			Case strWriteTypeAddNew
+	    		objEnv(strEnvVarName) = strEnvVarValue
+	    		WScript.StdOut.WriteBlankLines(1)
+				WScript.StdOut.WriteLine "CREATING " & strEnvVarName & " AND SETTING TO " & strEnvVarValue & " ... DONE!"
+				WScript.StdOut.WriteBlankLines(1)
+    	End Select    
     
     Case strPathEnvVar
+    	Select Case strWriteType
+    	    Case strWriteTypeReplace
+	    		strOldVarValue = objEnv(strEnvVarName)
+	    		strOldVarValue = PathExcludingJava(dictPathVars, arrPathTypes, strOldVarValue)
+	    		strNewVarValue = strOldVarValue & ";" & strEnvVarValue
+	    		objEnv(strEnvVarName) = strNewVarValue
+	    		WScript.StdOut.WriteBlankLines(1)
+				WScript.StdOut.WriteLine "SETTING " & strEnvVarName & " TO " & strNewVarValue & " ... DONE!"
+				WScript.StdOut.WriteBlankLines(1)
+    	    Case strWriteTypeAppend
+	    		strOldVarValue = objEnv(strEnvVarName)
+	    		strNewVarValue = strOldVarValue & ";" & strEnvVarValue
+	    		objEnv(strEnvVarName) = strNewVarValue
+	    		WScript.StdOut.WriteBlankLines(1)
+				WScript.StdOut.WriteLine "SETTING " & strEnvVarName & " TO " & strNewVarValue & " ... DONE!"
+				WScript.StdOut.WriteBlankLines(1)
+			Case strWriteTypeAddNew
+	    		WScript.StdOut.WriteBlankLines(1)
+				WScript.StdOut.WriteLine "CREATING " & strEnvVarName & " AND SETTING TO " & strEnvVarValue & " ... DONE!"
+				WScript.StdOut.WriteBlankLines(1)
+				objEnv(strEnvVarName) = strEnvVarValue
+    	End Select        
     	
 End Select
 
@@ -522,11 +584,11 @@ For Each objItem In colItems
 Next
 
 If (strPathEnvSet = 0) Then
-	dictJavaPathOut.Add "NoPathVars", "No Path Vars Found" 
+	dictJavaPathOut.Add NoPathVars, "No Path Vars Found" 
 	Set dictPathVars = dictJavaPathOut
 	Set GetJavaPathVars = dictJavaPathOut
 ElseIf (strCountFound = 0) Then
-	dictJavaPathOut.Add "NoJavaPathVars", "No Path Vars Found" 
+	dictJavaPathOut.Add NoJavaPathVars, "No Path Vars Found" 
 		Set dictPathVars = dictJavaPathOut
 	Set GetJavaPathVars = dictJavaPathOut
 Else 
@@ -560,7 +622,6 @@ For iTemp = strMatchPos To Len(strFullPathValue)
 Next
 
 strEndPos = (iTemp - 1)
-
 cntExtract = strEndPos
 strNew = Mid(strFullPathValue, 1, strEndPos)
 
@@ -577,6 +638,33 @@ ExtractPathValue = StrReverse(strJavaPath)
 
 End Function
 
+'###########################################################################
+
+
+Function PathExcludingJava(dictPaths, arrPathStrTypes, strCurPathValue)
+Dim strFinalStr, iStartPos, iLen
+strFinalStr = strCurPathValue
+iStartPos = 0
+iLen = 0
+
+	For Each strExp In arrPathStrTypes
+		If dictPaths.Exists(strExp) Then
+			strToReplace = dictPaths.Item(strExp)
+			If InStr(strCurPathValue, strToReplace) <> 0 Then
+				iStartPos = InStr(strCurPathValue, strToReplace)
+				iLen = iStartPos + Len(strToReplace)
+			 	If (StrComp(Mid(strCurPathValue,iLen, 1), ";") = 0 ) Then
+			 		strToReplace = strToReplace & ";"
+			 	End If
+			 	strFinalStr = Replace(strFinalStr,strToReplace,"")
+			 End If 
+		End If
+	Next
+	
+	PathExcludingJava = strFinalStr
+	 
+End Function
+
 
 '###########################################################################
 
@@ -587,22 +675,52 @@ Dim strSelectedJDK, strValue, strVarType
 
 Select Case strOptionInput
     Case strJavaHome
-    	arrJDK = dictInstalledJDKKRE.Item("JDK")
-    	strSelectedJDK = ShowJDKOptions(arrJDK)
+    	arrJDK = dictInstalledJDKKRE.Item(JDK)
+    	strSelectedJDK = ShowJDKOptions(arrJDK, strJavaHome,"")
     	strValue = arrJDK(3,strSelectedJDK)
-    	If dictHomeVars.Exists(javahomesys) Or dictHomeVars.Exists(javahomeusr) Then
+    	If dictHomeVars.Exists(javahomesys) Then
     		WriteEnvVar strVarTypeSys,strJavaHome,strValue, strWriteTypeReplace
     	Else
     		WriteEnvVar strVarTypeSys,strJavaHome,strValue, strWriteTypeAddNew
     	End If
+		WScript.StdOut.WriteBlankLines(1)
 		WScript.StdOut.WriteLine "VERIFYING, IF CHANGES HAVE PERSISTED ... "
 		WScript.StdOut.WriteBlankLines(1)
 		WScript.StdOut.WriteLine "CURRENT STATUS POST-CHANGES BELOW ... "
 		Call PublishJDKJRE (GetJavaHomeVars(), homevars)
-    	
+    Case strJreHome
+    	arrJRE = dictInstalledJDKKRE.Item(JRE)
+    	strSelectedJDK = ShowJDKOptions(arrJRE, strJreHome,"")
+    	strValue = arrJRE(3,strSelectedJDK)
+    	If dictHomeVars.Exists(jrehomesys) Then
+    		WriteEnvVar strVarTypeSys,strJreHome,strValue, strWriteTypeReplace
+    	Else
+    		WriteEnvVar strVarTypeSys,strJreHome,strValue, strWriteTypeAddNew
+    	End If
+    	WScript.StdOut.WriteBlankLines(1)
+		WScript.StdOut.WriteLine "VERIFYING, IF CHANGES HAVE PERSISTED ... "
+		WScript.StdOut.WriteBlankLines(1)
+		WScript.StdOut.WriteLine "CURRENT STATUS POST-CHANGES BELOW ... "
+		Call PublishJDKJRE (GetJavaHomeVars(), homevars)
+    Case strPathEnvVar
+    	arrJDK = dictInstalledJDKKRE.Item(JDK)
+    	strSelectedJDK = ShowJDKOptions(arrJDK, strJavaHome, strPathEnvVar)
+    	strValue = arrJDK(3,strSelectedJDK)
+    	strValue = strValue & "\bin"
+    	If dictPathVars.Exists(NoJavaPathVars) Then
+    		WriteEnvVar strVarTypeSys,strPathEnvVar,strValue, strWriteTypeAppend
+    	ElseIf dictPathVars.Exists(NoPathVars) Then
+    		WriteEnvVar strVarTypeSys,strPathEnvVar,strValue, strWriteTypeAddNew
+    	Else 
+    		WriteEnvVar strVarTypeSys,strPathEnvVar,strValue, strWriteTypeReplace
+    	End If
+    	WScript.StdOut.WriteBlankLines(1)
+		WScript.StdOut.WriteLine "VERIFYING, IF CHANGES HAVE PERSISTED ... "
+		WScript.StdOut.WriteBlankLines(1)
+		WScript.StdOut.WriteLine "CURRENT STATUS POST-CHANGES BELOW ... "
+		Call PublishJDKJRE (GetJavaPathVars(), pathvars)		        
 
 End Select
-
 
 
 End Sub
@@ -643,6 +761,7 @@ Sub ExitApp()
 	 WScript.StdOut.WriteBlankLines(1)
 	 WScript.StdOut.WriteLine "Press 'Enter' key to exit ..."
 	 ConsoleInput()
+	 WScript.Quit
 End Sub
 
 '###########################################################################
@@ -651,7 +770,7 @@ End Sub
 Function ShowUserOptions(strShowOption)
 Dim strUsrInput
 WScript.StdOut.WriteBlankLines(1)
-WScript.StdOut.Write vbtab & "~~~~~~~~~~   ~~~~~~~~~~   ~~~~~~~~~~   ~~~~~~~~~~   ~~~~~~~~~~ "
+WScript.StdOut.Write "~~~~~~~~~~   ~~~~~~~~~~   STARTING <INTERACTIVE MODE>   ~~~~~~~~~~   ~~~~~~~~~~ "
 WScript.StdOut.WriteBlankLines(2)
 
 Select Case strShowOption
@@ -663,6 +782,7 @@ Select Case strShowOption
 		WScript.StdOut.WriteLine "2. Set JRE_HOME (SYSTEM) Env Variable Only ?"
 		WScript.StdOut.WriteLine "3. Set PATH (SYSTEM) Env Variable Only ?"
 		WScript.StdOut.WriteLine "4. Set all above i.e. JAVA_HOME, JRE_HOME and PATH ?"
+		WScript.StdOut.WriteLine "5. Cancel and Exit ?"
 		WScript.StdOut.WriteBlankLines(1)
 		WScript.StdOut.WriteLine "Tip: Type a bullet number from above and hit Enter."
 		WScript.StdOut.WriteBlankLines(1)
@@ -672,7 +792,8 @@ Select Case strShowOption
 		WScript.StdOut.WriteBlankLines(1)
 		WScript.StdOut.WriteLine "1. Set JAVA_HOME (SYSTEM) Env Variable Only ?"
 		WScript.StdOut.WriteLine "2. Set PATH (SYSTEM) Env Variable Only ?"
-		WScript.StdOut.WriteLine "3. Set all above i.e. JAVA_HOME and PATH ?"
+		WScript.StdOut.WriteLine "3. Set both above i.e. JAVA_HOME and PATH ?"
+		WScript.StdOut.WriteLine "4. Cancel and Exit ?"
 		WScript.StdOut.WriteBlankLines(1)
 		WScript.StdOut.WriteLine "Tip: Type a bullet number from above and hit Enter."
 		WScript.StdOut.WriteBlankLines(1)
@@ -681,6 +802,7 @@ Select Case strShowOption
 		WScript.StdOut.WriteLine "CHOOSE ONE OF THE BELOW AVAILABLE OPTIONS? [Eg. Choose 1 for Setting JAVA_HOME]"
 		WScript.StdOut.WriteBlankLines(1)
 		WScript.StdOut.WriteLine "1. Set JRE_HOME (SYSTEM) Env Variable Only ?"
+		WScript.StdOut.WriteLine "2. Cancel and Exit ?"
 		WScript.StdOut.WriteBlankLines(1)
 		WScript.StdOut.WriteLine "Tip: Type a bullet number from above and hit Enter."
 		WScript.StdOut.WriteBlankLines(1)
@@ -705,6 +827,8 @@ If (ValidateInput(strUsrInput)) Then
 				ShowUserOptions = strPathEnvVar
 			ElseIf (strUsrInput = "4") Then
 				ShowUserOptions = strAllEnvVar
+			ElseIf (strUsrInput = "5") Then
+				ShowUserOptions = strExit
 			End If
 		Case FoundJdk
 			If strUsrInput = "1" Then
@@ -713,12 +837,17 @@ If (ValidateInput(strUsrInput)) Then
 				ShowUserOptions = strPathEnvVar
 			ElseIf (strUsrInput = "3") Then
 				ShowUserOptions = strJavaHomePathEnvVar
+			ElseIf (strUsrInput = "4") Then
+				ShowUserOptions = strExit
 			End If
 		Case FoundJre
 			If strUsrInput = "1" Then
 				ShowUserOptions = strJreHome
+			ElseIf (strUsrInput = "2") Then
+				ShowUserOptions = strExit			
 			End If
 		Case FoundNone
+		
 	End Select
 Else
 	Error
@@ -729,17 +858,35 @@ End Function
 
 '###########################################################################
 
-Function ShowJDKOptions(arrOJDKbj)
+Function ShowJDKOptions(arrOJDKbj, strVarTypeSelect, IsPath)
 Dim strUsrInput
 
-	WScript.StdOut.WriteBlankLines(2)
-	WScript.StdOut.WriteLine "CHOOSE ONE OF THE BELOW AVAILABLE JDKs"
-	WScript.StdOut.WriteBlankLines(1)
-		
-	For counter = 0 To UBound(arrOJDKbj, 2)
-		WScript.StdOut.WriteLine counter + 1 & ". " & arrOJDKbj(0, counter)
-	Next
-	
+Select Case strVarTypeSelect
+    Case strJavaHome
+    	If IsPath <> "" Then
+			WScript.StdOut.WriteBlankLines(2)
+			WScript.StdOut.WriteLine "SETTING PATH : CHOOSE ONE OF THE AVAILABLE JDKs"
+			WScript.StdOut.WriteLine "-------------"	
+			WScript.StdOut.WriteBlankLines(1)
+		Else
+			WScript.StdOut.WriteBlankLines(2)
+			WScript.StdOut.WriteLine "SETTING JAVA_HOME : CHOOSE ONE OF THE AVAILABLE JDKs"
+			WScript.StdOut.WriteLine "-----------------"	
+			WScript.StdOut.WriteBlankLines(1)			
+    	End If
+		For counter = 0 To UBound(arrOJDKbj, 2)
+			WScript.StdOut.WriteLine counter + 1 & ". " & arrOJDKbj(0, counter)
+		Next
+    Case strJreHome
+		WScript.StdOut.WriteBlankLines(2)
+		WScript.StdOut.WriteLine "SETTING JRE_HOME : CHOOSE ONE OF THE AVAILABLE JREs"
+		WScript.StdOut.WriteLine "-----------------"
+		WScript.StdOut.WriteBlankLines(1)
+		For counter = 0 To UBound(arrOJDKbj, 2)
+			WScript.StdOut.WriteLine counter + 1 & ". " & arrOJDKbj(0, counter)
+		Next
+End Select
+
 	WScript.StdOut.WriteBlankLines(1)
 	WScript.StdOut.WriteLine "Tip: Type a bullet number from above and hit Enter."
 	WScript.StdOut.WriteBlankLines(1)
@@ -774,7 +921,7 @@ Function ValidateInput (strArgsIn)
 
 Dim strValidInput, strArg, strFound
 strFound = False
-strValidInput = Array("1","2","3","4","5")
+strValidInput = Array("1","2","3","4","5","6")
 
 	For Each strArg In strValidInput
 		If strArg = strArgsIn Then
