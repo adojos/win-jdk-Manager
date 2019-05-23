@@ -23,11 +23,11 @@
 
 
 
-'If WScript.Arguments.length = 0 Then
-'   Set objShell = CreateObject("Shell.Application")
-'   objShell.ShellExecute "cscript.exe", Chr(34) & WScript.ScriptFullName & Chr(34) & " uac", "", "runas", 3
-'      WScript.Quit
-'End If   
+If WScript.Arguments.length = 0 Then
+   Set objShell = CreateObject("Shell.Application")
+   objShell.ShellExecute "cscript.exe", Chr(34) & WScript.ScriptFullName & Chr(34) & " uac", "", "runas", 3
+      WScript.Quit
+End If   
 '###########################################################################
 
 Dim dictInstalledJDKKRE
