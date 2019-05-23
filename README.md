@@ -9,6 +9,8 @@ Being built on Windows native technologies, it does not has any dependency on th
 Simply double-click the main script file named 'jdkManager.vbs' to launch the utility. This will launch the command line interface.
 Please note that you might get UAC prompt if UAC is enabled on your windows.
 
+_Refer [Wiki](https://github.com/testoxide/win-jdk-Manager/wiki) for usage tips and screenshots_
+
 ### Prerequisites
 
 Win 7 / 8 / Server.
