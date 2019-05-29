@@ -737,13 +737,13 @@ WScript.StdOut.WriteBlankLines(1)
 WScript.StdOut.WriteLine "      " & "****************************************************************"
 WScript.StdOut.WriteLine "      " & "----------------------------------------------------------------"
 WScript.StdOut.WriteBlankLines(1)
-WScript.StdOut.WriteLine VBTab & vbTab & VBTab & "    " & "win-JDK-Manager v1.0"
+WScript.StdOut.WriteLine VBTab & vbTab & VBTab & "    " & "WIN-JDK-MANAGER v1.0"
 WScript.StdOut.WriteBlankLines(1)
 WScript.StdOut.WriteLine VBTab & "VBScript (WMI,WScript) Utility. View all installed JDK/JRE"
 WScript.StdOut.WriteLine vbTab & " " & "versions [32bit/64bit].Easily view and re-point Env Vars"
 WScript.StdOut.WriteLine VBTab & "    " & "Platform: Win7/8 | Pre-Req: Script/Admin Privilege"
 WScript.StdOut.WriteBlankLines(1)
-WScript.StdOut.WriteLine VBTab & "  " & "Last Updated: Wed, 23 May 2019 | Author: Tushar Sharma"
+WScript.StdOut.WriteLine VBTab & "   " & "Updated: May 2019 | Tushar Sharma | www.testoxide.com"
 WScript.StdOut.WriteBlankLines(1)
 WScript.StdOut.WriteLine "      " & "****************************************************************"
 WScript.StdOut.WriteLine "      " & "----------------------------------------------------------------"
