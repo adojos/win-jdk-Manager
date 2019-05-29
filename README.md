@@ -26,7 +26,7 @@ Require admin privileges / script execution privileges (elevated UAC prompt) on 
 
 ### Known Issues / Bugs
 
-Please refer the Issue list [here](https://github.com/testoxide/win-jdk-Manager/issues).
+Please refer the [Issue list](https://github.com/testoxide/win-jdk-Manager/issues).
 
 Feel free to contribte by logging any new defects or issues
 
