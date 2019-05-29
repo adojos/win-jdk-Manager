@@ -24,6 +24,12 @@ Require admin privileges / script execution privileges (elevated UAC prompt) on 
 * [WScript](https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc738350(v=ws.10)) 
 * [WMI](https://docs.microsoft.com/en-us/windows/desktop/wmisdk/using-wmi)
 
+### Known Issues / Bugs
+
+Please refer the Issue list [here](https://github.com/testoxide/win-jdk-Manager/issues).
+
+Feel free to contribte by logging any new defects or issues
+
 ### Authors
 
 * **Tushar Sharma**
