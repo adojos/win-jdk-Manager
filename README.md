@@ -5,7 +5,7 @@ VBScript (WMI,WScript) Utility with Interactive cmd Interface. Enables to view a
 Built on windows native technologies!
 This utility has no dependency on third party compiler / interpreters / engines (e.g. java, nodejs. .NET or other such runtimes).
 
-### How To run
+### How To Run
 
 Simply double-click the main script file named 'jdkManager.vbs' to launch the utility. This will launch the command line interface.
 Please note that you might get UAC prompt if UAC is enabled on your windows.
