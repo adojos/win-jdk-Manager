@@ -2,7 +2,7 @@
 
 VBScript (WMI,WScript) Utility with Interactive cmd Interface. Enables to view all  installed JDK/JRE versions [32bit/64bit]. One-touch easy view and re-point JAVA Env Variables on Windows. Just double click to launch !
 
-Built on windows native technologies!
+Built on windows native technologies! ([VBScript](https://docs.microsoft.com/en-us/dotnet/visual-basic/language-reference/), [WScript](https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc738350(v=ws.10)), [WMI](https://docs.microsoft.com/en-us/windows/desktop/wmisdk/using-wmi))
 This utility has no dependency on third party compiler / interpreters / engines (e.g. java, nodejs. .NET or other such runtimes).
 
 ### How To Run
@@ -18,11 +18,9 @@ Win 7 / 8 / Server.
 
 Require admin privileges / script execution privileges (elevated UAC prompt) on your windows system.
 
-### Built With
+### Additional Batch Files
 
-* [VBScript](https://docs.microsoft.com/en-us/dotnet/visual-basic/language-reference/)
-* [WScript](https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc738350(v=ws.10)) 
-* [WMI](https://docs.microsoft.com/en-us/windows/desktop/wmisdk/using-wmi)
+A set of windows batch files are included in the source (as additional utility) which can as well be used for switching JAVA environment and setting environment variables. However these are not related to 'win-jdk-Manager' in anyway.
 
 ### Known Issues / Bugs
 
