@@ -820,7 +820,7 @@ WScript.StdOut.WriteBlankLines(1)
 WScript.StdOut.WriteLine "      " & "****************************************************************"
 WScript.StdOut.WriteLine "      " & "----------------------------------------------------------------"
 WScript.StdOut.WriteBlankLines(1)
-WScript.StdOut.WriteLine VBTab & vbTab & VBTab & "    " & "WIN-JDK-MANAGER v1.0"
+WScript.StdOut.WriteLine VBTab & vbTab & VBTab & "    " & "WIN-JDK-MANAGER v2.0"
 WScript.StdOut.WriteBlankLines(1)
 WScript.StdOut.WriteLine VBTab & "VBScript (WMI,WScript) Utility. View all installed JDK/JRE"
 WScript.StdOut.WriteLine vbTab & " " & "versions [32bit/64bit].Easily view and re-point Env Vars"
