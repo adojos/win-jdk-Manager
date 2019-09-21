@@ -16,9 +16,8 @@
 '# https://support.microsoft.com/en-us/help/974524/event-log-message-indicates-that-the-windows-installer-reconfigured-al
 '#
 '# PLATFORM: Win7/8/Server | PRE-REQ: Script/Admin Privilege
-'# LAST UPDATED: Wed, 23 May 2019 | AUTHOR: Tushar Sharma
+'# LAST UPDATED: Wed, 17 Sept 2019 | AUTHOR: Tushar Sharma
 '##################################################################################################
-
 
 
 
@@ -28,6 +27,8 @@ If WScript.Arguments.length = 0 Then
    objShell.ShellExecute "cscript.exe", Chr(34) & WScript.ScriptFullName & Chr(34) & " uac", "", "runas", 3
       WScript.Quit
 End If   
+
+
 '###########################################################################
 
 Dim dictInstalledJDKKRE
@@ -48,6 +49,7 @@ Const strJavaHomePathEnvVar = "JavaHomePathEnvVar"
 Const NoPathVars = "NoPathVars"
 Const NoJavaPathVars = "NoJavaPathVars"
 Const strAllEnvVar = "strAllEnvVar"
+Const strInvalid = "invalid"
 arrPathTypes = Array("javapath", "%JAVA_HOME%\bin", "jdk", "jre")
 
 Const FoundJdkJre = "FoundJdkJre"
@@ -69,54 +71,112 @@ Const jrehomesys = "jrehomesys"
 Const jrehomeusr = "jrehomeusr"
 
 
-Call ShowWelcomeBox()
-Call GetInstalledJDKJRE ()
-Call GetJavaHomeVars ()
-Call GetJavaPathVars ()
-
-Call PublishJDKJRE (dictInstalledJDKKRE, installedjava)
-Call PublishJDKJRE (dictHomeVars, homevars)
-Call PublishJDKJRE (dictPathVars, pathvars)
+Call StartJDKManager()
 
 
-If Not(dictInstalledJDKKRE.Exists("NoJDK")) And Not(dictInstalledJDKKRE.Exists("NoJRE")) Then
-	strSelectedOption = ShowUserOptions(FoundJdkJre)
-	Select Case strSelectedOption
-	    Case strExit
-	    	Call ExitApp()
-	    Case strAllEnvVar
-			ParseAndCallSetter(strJavaHome)
-			ParseAndCallSetter(strJreHome)
-			ParseAndCallSetter(strPathEnvVar)
-	    Case Else
-	    	ParseAndCallSetter(strSelectedOption)
-	End Select
-ElseIf Not(dictInstalledJDKKRE.Exists("NoJDK"))  And (dictInstalledJDKKRE.Exists("NoJRE")) Then
-	strSelectedOption = ShowUserOptions(FoundJdk)
-	Select Case strSelectedOption
-	    Case strExit
-	    	Call ExitApp()
-	    Case strJavaHomePathEnvVar
-			ParseAndCallSetter(strJavaHome)
-			ParseAndCallSetter(strPathEnvVar)
-	    Case Else
-	    	ParseAndCallSetter(strSelectedOption)
-	End Select
-ElseIf (dictInstalledJDKKRE.Exists("NoJDK"))  And Not(dictInstalledJDKKRE.Exists("NoJRE")) Then
-		strSelectedOption = ShowUserOptions(FoundJre)
-		Select Case strSelectedOption
-		    Case strExit
-		    	Call ExitApp()
-		    Case Else
-		    	ParseAndCallSetter(strSelectedOption)
-		End Select
-ElseIf (dictInstalledJDKKRE.Exists("NoJDK"))  And (dictInstalledJDKKRE.Exists("NoJRE")) Then
-		Call ShowUserOptions(FoundNone)
-		Call ExitApp()
-End If 
+
+'###########################################################################
 
 
-Call ExitApp()
+'-----------------------------------------------------
+' **** STEP 1: READING WIN ENVIRONMENT VARIABLE **** '
+'-----------------------------------------------------
+
+Sub StartJDKManager()
+
+Dim IsError
+
+	Call ShowWelcomeBox()
+	Call GetInstalledJDKJRE ()
+	Call GetJavaHomeVars ()
+	Call GetJavaPathVars ()
+	
+	Call PublishJDKJRE (dictInstalledJDKKRE, installedjava)
+	Call PublishJDKJRE (dictHomeVars, homevars)
+	Call PublishJDKJRE (dictPathVars, pathvars)
+	
+	If Not(dictInstalledJDKKRE.Exists("NoJDK")) And Not(dictInstalledJDKKRE.Exists("NoJRE")) Then
+		strSelectedOption = ShowUserOptions(FoundJdkJre)	
+		If (strSelectedOption <> strInvalid) Then
+			Select Case strSelectedOption
+			    Case strExit
+			    	Call ExitApp()
+			    Case strAllEnvVar
+					For i = 1 To 1										
+						If Not(ParseAndCallSetter(strJavaHome))Then 
+							IsError = True
+							Exit For
+						End If
+						If Not(ParseAndCallSetter(strJreHome)) Then
+							IsError = True
+							Exit For
+						End If
+						If Not(ParseAndCallSetter(strPathEnvVar)) Then
+							IsError = True
+							Exit For
+						End If
+					Next
+					If IsError Then
+						Call RestartCheck()
+					End If
+					Call RestartCheck()
+			    Case Else
+			    	ParseAndCallSetter(strSelectedOption)
+					Call RestartCheck()
+			End Select
+		Else 
+			Call RestartCheck()
+		End If
+	ElseIf Not(dictInstalledJDKKRE.Exists("NoJDK"))  And (dictInstalledJDKKRE.Exists("NoJRE")) Then
+		strSelectedOption = ShowUserOptions(FoundJdk)
+		If (strSelectedOption <> strInvalid) Then
+			Select Case strSelectedOption
+			    Case strExit
+			    	Call ExitApp()
+			    Case strJavaHomePathEnvVar
+					For i = 1 To 1
+						If Not(ParseAndCallSetter(strJavaHome)) Then
+							IsError = True
+							Exit For
+						End If
+						If Not(ParseAndCallSetter(strPathEnvVar)) Then
+							IsError = True
+							Exit For
+						End If
+					Next
+					If IsError Then
+						Call RestartCheck()
+					End If	
+					Call RestartCheck()				
+			    Case Else
+			    	ParseAndCallSetter(strSelectedOption)
+			    	Call RestartCheck()
+			End Select
+		Else 
+			Call RestartCheck()
+		End If		
+	ElseIf (dictInstalledJDKKRE.Exists("NoJDK"))  And Not(dictInstalledJDKKRE.Exists("NoJRE")) Then
+			strSelectedOption = ShowUserOptions(FoundJre)
+		If (strSelectedOption <> strInvalid) Then
+				Select Case strSelectedOption
+				    Case strExit
+				    	Call ExitApp()
+				    Case Else
+				    	ParseAndCallSetter(strSelectedOption)
+				    	Call RestartCheck()
+				End Select
+			Else 
+				Call RestartCheck()
+			End If				
+	ElseIf (dictInstalledJDKKRE.Exists("NoJDK"))  And (dictInstalledJDKKRE.Exists("NoJRE")) Then
+			Call ShowUserOptions(FoundNone)
+			Call ExitApp()
+	End If 
+
+	'Call ExitApp()
+
+End Sub
+
 
 
 '###########################################################################
@@ -142,9 +202,11 @@ Set objShell = Nothing
 
 End Sub
 
-'-----------------------------------------
-' **** WRITING WIN ENVIRONMENT VARIABLE **** '
-'-----------------------------------------
+
+'-------------------------------------------------------------------------
+' **** STEP 7: WRITING WIN ENVIRONMENT VARIABLE **** '
+'-------------------------------------------------------------------------
+
 Sub WriteEnvVar(strEnvVarType, strEnvVarName, strEnvVarValue, strWriteType)
 
 Dim strOldVarValue, strNewVarValue
@@ -232,9 +294,10 @@ End Sub
 '###########################################################################
 
 
-'--------------------------------------------------
-' **** LIST INSTALLED JDK/JRE From REGISTRY **** '
-'--------------------------------------------------
+'----------------------------------------------------------
+' **** STEP 2: LIST INSTALLED JDK/JRE From REGISTRY **** '
+'----------------------------------------------------------
+
 Function GetInstalledJDKJRE()
 
 Const HKLM = &H80000002 'HKEY_LOCAL_MACHINE
@@ -368,7 +431,7 @@ End Function
 
 
 '-----------------------------------------
-' **** PUBLISH OUTPUT **** '
+' **** STEP 5: PUBLISH OUTPUT **** '
 '-----------------------------------------
 
 Sub PublishJDKJRE (oDataDict, strDictType)
@@ -421,7 +484,6 @@ Select Case strDictType
     		WScript.StdOut.WriteBlankLines(1)    		
     	If oDataDict.Exists(javahomeusr) Then
     		strTemp = oDataDict.Item(javahomeusr)
-    		MsgBox strTemp
     		WScript.StdOut.WriteLine "JAVA_HOME = " & strTemp 
     	Else
     		WScript.StdOut.WriteLine ("JAVA_HOME = CURRENTLY NOT SET ..!")
@@ -485,8 +547,9 @@ End Sub
 
 
 '--------------------------------------------------
-' **** LIST JDK/JRE ENV HOME VARAIABLES **** '
+' **** STEP 3: LIST JDK/JRE ENV HOME VARAIABLES **** '
 '--------------------------------------------------
+
 Function GetJavaHomeVars()
 'Using WMI retrieves both USER and SYSTEM variable together, you cannot pick and choose
 
@@ -557,7 +620,7 @@ End Function
 '###########################################################################
 
 '--------------------------------------------------
-' **** LIST PATH ENV VARAIABLES **** '
+' **** STEP 4: LIST PATH ENV VARAIABLES **** '
 '--------------------------------------------------
 Function GetJavaPathVars()
 
@@ -643,35 +706,38 @@ End Function
 
 '###########################################################################
 
+'-------------------------------------------------------------------------
+' **** STEP 8: REMOVE PREVIOUS JAVA VALUES FROM PREVIOUS PATH VAR **** '
+'-------------------------------------------------------------------------
 
 Function PathExcludingJava(dictPaths, arrPathStrTypes, strCurPathValue)
-Dim strFinalStr, iStartPos, iLen
-strFinalStr = strCurPathValue
-iStartPos = 0
-iLen = 0
 
-	For Each strExp In arrPathStrTypes
-		If dictPaths.Exists(strExp) Then
-			strToReplace = dictPaths.Item(strExp)
-			If InStr(strCurPathValue, strToReplace) <> 0 Then
-				iStartPos = InStr(strCurPathValue, strToReplace)
-				iLen = iStartPos + Len(strToReplace)
-			 	If (StrComp(Mid(strCurPathValue,iLen, 1), ";") = 0 ) Then
-			 		strToReplace = strToReplace & ";"
-			 	End If
-			 	strFinalStr = Replace(strFinalStr,strToReplace,"")
-			 End If 
-		End If
-	Next
-	
-	PathExcludingJava = strFinalStr
-	 
+Dim strInterimPathArray1, strInterimPathArray2
+Dim strToReplace
+
+strInterimPathArray1 = Split(strCurPathValue, ";", -1, 1)
+
+    For Each strExp In arrPathStrTypes
+        If dictPaths.Exists(strExp) Then
+            strToReplace = dictPaths.Item(strExp)
+            strInterimPathArray2 = Filter(strInterimPathArray1, strToReplace, False)
+            strInterimPathArray1 = strInterimPathArray2
+        End If
+    Next
+        
+    PathExcludingJava = Join(strInterimPathArray1, ";")
+     
 End Function
 
 
 '###########################################################################
 
-Sub ParseAndCallSetter(strOptionInput) 'javahome
+
+'-------------------------------------------------------------------------
+' **** STEP 6: PARSE USER INPUT AND RE-DIRECT TO SPECIFIC SETTER **** '
+'-------------------------------------------------------------------------
+
+Function ParseAndCallSetter(strOptionInput) 'javahome
 
 Dim arrJDK, arrJRE
 Dim strSelectedJDK, strValue, strVarType
@@ -680,53 +746,70 @@ Select Case strOptionInput
     Case strJavaHome
     	arrJDK = dictInstalledJDKKRE.Item(JDK)
     	strSelectedJDK = ShowJDKOptions(arrJDK, strJavaHome,"")
-    	strValue = arrJDK(3,strSelectedJDK)
-    	If dictHomeVars.Exists(javahomesys) Then
-    		WriteEnvVar strVarTypeSys,strJavaHome,strValue, strWriteTypeReplace
-    	Else
-    		WriteEnvVar strVarTypeSys,strJavaHome,strValue, strWriteTypeAddNew
-    	End If
-		WScript.StdOut.WriteBlankLines(1)
-		WScript.StdOut.WriteLine "VERIFYING, IF CHANGES HAVE PERSISTED ... "
-		WScript.StdOut.WriteBlankLines(1)
-		WScript.StdOut.WriteLine "CURRENT STATUS POST-CHANGES BELOW ... "
-		Call PublishJDKJRE (GetJavaHomeVars(), homevars)
+    	If (strSelectedJDK <> strInvalid) Then
+	    	strValue = arrJDK(3,strSelectedJDK)
+	    	If dictHomeVars.Exists(javahomesys) Then
+	    		WriteEnvVar strVarTypeSys,strJavaHome,strValue, strWriteTypeReplace
+	    	Else
+	    		WriteEnvVar strVarTypeSys,strJavaHome,strValue, strWriteTypeAddNew
+	    	End If
+			WScript.StdOut.WriteBlankLines(1)
+			WScript.StdOut.WriteLine "VERIFYING, IF CHANGES HAVE PERSISTED ... "
+			WScript.StdOut.WriteBlankLines(1)
+			WScript.StdOut.WriteLine "CURRENT STATUS POST-CHANGES BELOW ... "
+			Call PublishJDKJRE (GetJavaHomeVars(), homevars)
+			ParseAndCallSetter = True
+		Else 
+			ParseAndCallSetter = False
+		End If
     Case strJreHome
     	arrJRE = dictInstalledJDKKRE.Item(JRE)
     	strSelectedJDK = ShowJDKOptions(arrJRE, strJreHome,"")
-    	strValue = arrJRE(3,strSelectedJDK)
-    	If dictHomeVars.Exists(jrehomesys) Then
-    		WriteEnvVar strVarTypeSys,strJreHome,strValue, strWriteTypeReplace
-    	Else
-    		WriteEnvVar strVarTypeSys,strJreHome,strValue, strWriteTypeAddNew
-    	End If
-    	WScript.StdOut.WriteBlankLines(1)
-		WScript.StdOut.WriteLine "VERIFYING, IF CHANGES HAVE PERSISTED ... "
-		WScript.StdOut.WriteBlankLines(1)
-		WScript.StdOut.WriteLine "CURRENT STATUS POST-CHANGES BELOW ... "
-		Call PublishJDKJRE (GetJavaHomeVars(), homevars)
+    	If (strSelectedJDK <> strInvalid) Then
+	    	strValue = arrJRE(3,strSelectedJDK)
+	    	If dictHomeVars.Exists(jrehomesys) Then
+	    		WriteEnvVar strVarTypeSys,strJreHome,strValue, strWriteTypeReplace
+	    	Else
+	    		WriteEnvVar strVarTypeSys,strJreHome,strValue, strWriteTypeAddNew
+	    	End If
+	    	WScript.StdOut.WriteBlankLines(1)
+			WScript.StdOut.WriteLine "VERIFYING, IF CHANGES HAVE PERSISTED ... "
+			WScript.StdOut.WriteBlankLines(1)
+			WScript.StdOut.WriteLine "CURRENT STATUS POST-CHANGES BELOW ... "
+			Call PublishJDKJRE (GetJavaHomeVars(), homevars)
+			ParseAndCallSetter = True
+		Else 
+			ParseAndCallSetter = False
+		End If
     Case strPathEnvVar
     	arrJDK = dictInstalledJDKKRE.Item(JDK)
     	strSelectedJDK = ShowJDKOptions(arrJDK, strJavaHome, strPathEnvVar)
-    	strValue = arrJDK(3,strSelectedJDK)
-    	strValue = strValue & "\bin"
-    	If dictPathVars.Exists(NoJavaPathVars) Then
-    		WriteEnvVar strVarTypeSys,strPathEnvVar,strValue, strWriteTypeAppend
-    	ElseIf dictPathVars.Exists(NoPathVars) Then
-    		WriteEnvVar strVarTypeSys,strPathEnvVar,strValue, strWriteTypeAddNew
-    	Else 
-    		WriteEnvVar strVarTypeSys,strPathEnvVar,strValue, strWriteTypeReplace
-    	End If
-    	WScript.StdOut.WriteBlankLines(1)
-		WScript.StdOut.WriteLine "VERIFYING, IF CHANGES HAVE PERSISTED ... "
-		WScript.StdOut.WriteBlankLines(1)
-		WScript.StdOut.WriteLine "CURRENT STATUS POST-CHANGES BELOW ... "
-		Call PublishJDKJRE (GetJavaPathVars(), pathvars)		        
-
+    	If (strSelectedJDK <> strInvalid) Then
+	    	strValue = arrJDK(3,strSelectedJDK)
+	    	strValue = strValue & "\bin"
+	    	If dictPathVars.Exists(NoJavaPathVars) Then
+	    		WriteEnvVar strVarTypeSys,strPathEnvVar,strValue, strWriteTypeAppend
+	    	ElseIf dictPathVars.Exists(NoPathVars) Then
+	    		WriteEnvVar strVarTypeSys,strPathEnvVar,strValue, strWriteTypeAddNew
+	    	Else 
+	    		WriteEnvVar strVarTypeSys,strPathEnvVar,strValue, strWriteTypeReplace
+	    	End If
+	    	WScript.StdOut.WriteBlankLines(1)
+			WScript.StdOut.WriteLine "VERIFYING, IF CHANGES HAVE PERSISTED ... "
+			WScript.StdOut.WriteBlankLines(1)
+			WScript.StdOut.WriteLine "CURRENT STATUS POST-CHANGES BELOW ... "
+			Call PublishJDKJRE (GetJavaPathVars(), pathvars)
+			ParseAndCallSetter = True
+		Else 
+			ParseAndCallSetter = False
+		End If			
+    Case Else
+        WScript.StdOut.WriteBlankLines (1)
+        WScript.StdOut.WriteLine "ERROR! INVALID CHOICE !"
 End Select
 
 
-End Sub
+End Function
 
 
 '###########################################################################
@@ -743,7 +826,7 @@ WScript.StdOut.WriteLine VBTab & "VBScript (WMI,WScript) Utility. View all insta
 WScript.StdOut.WriteLine vbTab & " " & "versions [32bit/64bit].Easily view and re-point Env Vars"
 WScript.StdOut.WriteLine VBTab & "    " & "Platform: Win7/8 | Pre-Req: Script/Admin Privilege"
 WScript.StdOut.WriteBlankLines(1)
-WScript.StdOut.WriteLine VBTab & "   " & "Updated: May 2019 | Tushar Sharma | www.testoxide.com"
+WScript.StdOut.WriteLine VBTab & "   " & "Updated: Sept 2019 | Tushar Sharma | www.testoxide.com"
 WScript.StdOut.WriteBlankLines(1)
 WScript.StdOut.WriteLine "      " & "****************************************************************"
 WScript.StdOut.WriteLine "      " & "----------------------------------------------------------------"
@@ -771,7 +854,9 @@ End Sub
 
 
 Function ShowUserOptions(strShowOption)
-Dim strUsrInput
+
+Dim strUsrInput, strAvailableOptions
+
 WScript.StdOut.WriteBlankLines(2)
 WScript.StdOut.Write "             ~~~~~~~~~~   STARTING <INTERACTIVE MODE>   ~~~~~~~~~~              "
 WScript.StdOut.WriteBlankLines(2)
@@ -817,44 +902,58 @@ Select Case strShowOption
 		WScript.StdOut.WriteBlankLines(1)
 End Select
 
+'COLLECT USER INPUT
 strUsrInput = ConsoleInput()
 
-If (ValidateInput(strUsrInput)) Then 
+'If (ValidateInput(strUsrInput,5)) Then 
 	Select Case strShowOption
 	    Case FoundJdkJre
-			If strUsrInput = "1" Then
-				ShowUserOptions = strJavaHome
-			ElseIf (strUsrInput = "2") Then
-				ShowUserOptions = strJreHome
-			ElseIf (strUsrInput = "3") Then
-				ShowUserOptions = strPathEnvVar
-			ElseIf (strUsrInput = "4") Then
-				ShowUserOptions = strAllEnvVar
-			ElseIf (strUsrInput = "5") Then
-				ShowUserOptions = strExit
+			If (ValidateInput(strUsrInput,5)) Then
+				If strUsrInput = "1" Then
+					ShowUserOptions = strJavaHome
+				ElseIf (strUsrInput = "2") Then
+					ShowUserOptions = strJreHome
+				ElseIf (strUsrInput = "3") Then
+					ShowUserOptions = strPathEnvVar
+				ElseIf (strUsrInput = "4") Then
+					ShowUserOptions = strAllEnvVar
+				ElseIf (strUsrInput = "5") Then
+					ShowUserOptions = strExit
+				End If
+			Else
+				ShowUserOptions = strInvalid
 			End If
 		Case FoundJdk
-			If strUsrInput = "1" Then
-				ShowUserOptions = strJavaHome
-			ElseIf (strUsrInput = "2") Then
-				ShowUserOptions = strPathEnvVar
-			ElseIf (strUsrInput = "3") Then
-				ShowUserOptions = strJavaHomePathEnvVar
-			ElseIf (strUsrInput = "4") Then
-				ShowUserOptions = strExit
+			If (ValidateInput(strUsrInput,4)) Then
+				If strUsrInput = "1" Then
+					ShowUserOptions = strJavaHome
+				ElseIf (strUsrInput = "2") Then
+					ShowUserOptions = strPathEnvVar
+				ElseIf (strUsrInput = "3") Then
+					ShowUserOptions = strJavaHomePathEnvVar
+				ElseIf (strUsrInput = "4") Then
+					ShowUserOptions = strExit
+				End If
+			Else
+				ShowUserOptions = strInvalid			
 			End If
 		Case FoundJre
-			If strUsrInput = "1" Then
-				ShowUserOptions = strJreHome
-			ElseIf (strUsrInput = "2") Then
-				ShowUserOptions = strExit			
+			If (ValidateInput(strUsrInput,2)) Then
+				If strUsrInput = "1" Then
+					ShowUserOptions = strJreHome
+				ElseIf (strUsrInput = "2") Then
+					ShowUserOptions = strExit			
+				End If
+			Else
+				ShowUserOptions = strInvalid				
 			End If
 		Case FoundNone
 		
 	End Select
-Else
-	Error
-End If
+	
+'Else
+'	ShowUserOptions = False
+'End If
 
 
 End Function
@@ -893,12 +992,13 @@ End Select
 	WScript.StdOut.WriteBlankLines(1)
 	WScript.StdOut.WriteLine "Tip: Type a bullet number from above and hit Enter."
 	WScript.StdOut.WriteBlankLines(1)
+	
 	strUsrInput = ConsoleInput()
 	
-	If (ValidateInput(strUsrInput)) Then 
+	If (ValidateInput(strUsrInput, UBound(arrOJDKbj, 2) + 1)) Then
 		ShowJDKOptions = strUsrInput-1	
 	Else
-		Error
+		ShowJDKOptions = strInvalid
 	End If
 
 End Function
@@ -906,25 +1006,44 @@ End Function
 
 '###########################################################################
 
-Function ValidateInput (strArgsIn)
+Function ValidateInput (strArgsIn, iMaxVal)
 
 Dim strValidInput, strArg, strFound
 strFound = False
-strValidInput = Array("1","2","3","4","5","6")
 
-	For Each strArg In strValidInput
-		If strArg = strArgsIn Then
+strValidNumIn = Array("1","2","3","4","5","6")
+strValidStrIn = Array("Y","N","YES","NO")
+
+If (IsNumeric(strArgsIn)) Then
+	If (CInt(strArgsIn) <= CInt(iMaxVal)) And (strArgsIn <> 0) Then
+		For Each strArg In strValidNumIn
+			If (StrComp(strArg, strArgsIn) = 0) Then
+				strFound = True
+				Exit For
+			End If
+		Next
+	Else 
+		strFound = False
+	End If
+Else
+	For Each strArg In strValidStrIn
+		If (StrComp(UCase(strArg), strArgsIn) = 0) Then
 			strFound = True
+			Exit For
 		End If
 	Next
+End If
 	
 	If Not(strFound) Then
 		ValidateInput = False
+		WScript.StdOut.WriteBlankLines(1)
+		WScript.StdOut.WriteLine "ERROR : INVALID INPUT! PLEASE RE-LOAD THE PROGRAM AND TRY AGAIN."
 	Else 
 		ValidateInput = True
 	End If
 
 End Function 
+
 
 '###########################################################################
 
@@ -956,7 +1075,43 @@ Function CheckArrayData (arrInput)
 
 End Function
 
+'###########################################################################
 
+
+Function IsReloadExit ()
+
+WScript.StdOut.WriteBlankLines(2)
+WScript.StdOut.WriteLine "RE-LOAD THE PROGRAM OR EXIT (y=Reload / n=Exit) ?"
+strResponse = UCase(ConsoleInput())
+
+If ValidateInput(strResponse,"") Then
+	Select Case strResponse
+	    Case "Y"
+	    	IsReloadExit = True
+	    Case "N"
+	    	IsReloadExit = False
+	End Select
+Else
+	WScript.StdOut.WriteLine "INVALID CHOICE!"
+	ExitApp()
+End If
+
+End Function
+
+
+'###########################################################################
+
+
+Sub RestartCheck ()
+	If IsReloadExit() Then
+		Call StartJDKManager()
+	Else
+		ExitApp()
+	End If
+End Sub
+
+
+'###########################################################################
 
 
 '===========================================================================================================
