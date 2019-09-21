@@ -3,7 +3,7 @@
 VBScript (WMI,WScript) Utility with Interactive cmd Interface. Enables to view all  installed JDK/JRE versions [32bit/64bit]. One-touch easy view and re-point JAVA Env Variables on Windows. Just double click to launch !
 
 Built on windows native technologies! ([VBScript](https://docs.microsoft.com/en-us/dotnet/visual-basic/language-reference/), [WScript](https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc738350(v=ws.10)), [WMI](https://docs.microsoft.com/en-us/windows/desktop/wmisdk/using-wmi))
-This utility has no dependency on third party compiler / interpreters / engines (e.g. java, nodejs. .NET or other such runtimes), hence lightweight, yet powerful!
+This utility has no dependency on third party compiler / interpreters / engines (e.g. java, nodejs. .NET or other such runtimes), hence simple and lightweight!
 
 ### Download
 
