@@ -1,3 +1,7 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/testoxide/win-jdk-Manager)
+![GitHub repo size](https://img.shields.io/github/repo-size/testoxide/win-jdk-Manager)
+
 # win-jdk-Manager
 
 VBScript (WMI,WScript) Utility with Interactive cmd Interface. Enables to view all  installed JDK/JRE versions [32bit/64bit]. One-touch easy view and re-point JAVA Env Variables on Windows. Just double click to launch !
