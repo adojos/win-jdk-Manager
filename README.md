@@ -20,7 +20,7 @@ Instead use any latest stable release version, available for download from _[Rel
 Simply double-click the main script file named 'jdkManager.vbs' to launch the utility. This will launch the command line interface.
 Please note that you might get UAC prompt if UAC is enabled on your windows.
 
-_Refer [Wiki](https://github.com/testoxide/win-jdk-Manager/wiki) for usage tips and screenshots_
+_Refer [Wiki](https://github.com/testoxide/win-jdk-Manager/wiki) for usage tips, screenshots and [video demo](https://github.com/testoxide/win-jdk-Manager/wiki/Video-Demo-&-Overview)_
 
 ### Prerequisites
 
