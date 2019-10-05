@@ -1,6 +1,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/testoxide/win-jdk-Manager)
-![GitHub repo size](https://img.shields.io/github/repo-size/testoxide/win-jdk-Manager)
+![GitHub repo size](https://img.shields.io/github/repo-size/testoxide/win-jdk-Manager) ![platform](https://img.shields.io/badge/platform-win--32%20%7C%20win--64-lightgrey)
 
 # win-jdk-Manager
 
